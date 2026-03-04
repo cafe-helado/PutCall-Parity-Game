@@ -426,7 +426,7 @@ function startGame(){
   const isUnlimited = duration===null;
   document.getElementById('gScore').textContent = '0';
   document.getElementById('gStreak').textContent = '';
-  document.getElementById('finishBtn').style.display = isUnlimited?'block':'none';
+  document.getElementById('finishBtn').style.display = 'block';
   document.getElementById('progressBar').style.display = isUnlimited?'none':'block';
   document.getElementById('progressFill').style.width = '100%';
   document.getElementById('progressFill').style.background = 'linear-gradient(90deg, var(--gold-dim), var(--gold))';
@@ -492,6 +492,11 @@ function goMenu(){
 
 // ─── Init ────────────────────────────────────────────────────────
 buildMenu();
+document.addEventListener('keydown', function(e){
+  if(e.key === 'Escape' && document.getElementById('gameScreen').classList.contains('active')){
+    endGame();
+  }
+});
 </script>
 </body>
 </html>
