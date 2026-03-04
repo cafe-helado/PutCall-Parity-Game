@@ -26,8 +26,8 @@
     --font: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI', Helvetica, Arial, sans-serif;
     --mono: 'SF Mono', 'Menlo', 'Consolas', 'Monaco', monospace;
   }
-  html, body { height:100%; background:var(--bg); color:var(--bright); font-family:var(--font); overflow:hidden; }
-  body { display:flex; flex-direction:column; }
+  html { height:100%; background:var(--bg); color:var(--bright); font-family:var(--font); }
+  body { min-height:100%; min-height:100dvh; background:var(--bg); display:flex; flex-direction:column; overflow-x:hidden; }
   input[type="text"], input[type="number"] {
     -webkit-appearance:none; appearance:none; border-radius:8px;
   }
@@ -36,8 +36,8 @@
 
   /* ─── Screens ─── */
   .screen { display:none; flex-direction:column; align-items:center; justify-content:center;
-    min-height:100vh; padding:24px; padding-top: env(safe-area-inset-top, 20px);
-    padding-bottom: env(safe-area-inset-bottom, 20px); }
+    min-height:100vh; min-height:100dvh; padding:24px; padding-top: env(safe-area-inset-top, 20px);
+    padding-bottom: env(safe-area-inset-bottom, 20px); overflow-y:auto; }
   .screen.active { display:flex; }
 
   /* ─── Menu ─── */
