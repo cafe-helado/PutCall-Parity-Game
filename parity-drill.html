@@ -1,0 +1,497 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#f5f5f8">
+<title>Parity Drill</title>
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+  :root {
+    --bg: #f5f5f8;
+    --surface: rgba(0,0,0,0.04);
+    --border: rgba(0,0,0,0.1);
+    --gold: #c48820;
+    --gold-dim: #a07020;
+    --gold-bg: rgba(196,136,32,0.08);
+    --green: #1a9a50;
+    --red: #d83030;
+    --white: #1a1a2e;
+    --bright: #1a1a2e;
+    --mid: #555568;
+    --dim: #888898;
+    --font: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI', Helvetica, Arial, sans-serif;
+    --mono: 'SF Mono', 'Menlo', 'Consolas', 'Monaco', monospace;
+  }
+  html, body { height:100%; background:var(--bg); color:var(--bright); font-family:var(--font); overflow:hidden; }
+  body { display:flex; flex-direction:column; }
+  input[type="text"], input[type="number"] {
+    -webkit-appearance:none; appearance:none; border-radius:8px;
+  }
+  button { cursor:pointer; border:none; font-family:var(--font); transition: all 0.12s ease; }
+  button:active { transform:scale(0.97); }
+
+  /* ─── Screens ─── */
+  .screen { display:none; flex-direction:column; align-items:center; justify-content:center;
+    min-height:100vh; padding:24px; padding-top: env(safe-area-inset-top, 20px);
+    padding-bottom: env(safe-area-inset-bottom, 20px); }
+  .screen.active { display:flex; }
+
+  /* ─── Menu ─── */
+  .menu-label { font-size:12px; letter-spacing:5px; color:var(--gold); font-weight:600; text-transform:uppercase; margin-bottom:10px; }
+  .menu-title { font-size:clamp(36px, 8vw, 52px); font-weight:300; color:var(--white); margin-bottom:4px; }
+  .menu-sub { font-size:15px; color:var(--mid); margin-bottom:28px; }
+
+  .identity-card {
+    background:#fff; border:1px solid rgba(0,0,0,0.08); border-radius:10px;
+    padding:16px 20px; margin-bottom:24px; width:100%; max-width:520px;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.05);
+  }
+  .identity-card h3 { font-size:10px; letter-spacing:3px; text-transform:uppercase; color:var(--dim); margin-bottom:10px; font-weight:600; }
+  .identity-row { display:flex; justify-content:space-between; align-items:center; padding:6px 0;
+    border-bottom:1px solid rgba(0,0,0,0.05); }
+  .identity-row:last-child { border-bottom:none; }
+  .identity-row .name { font-size:13px; color:var(--mid); min-width:80px; }
+  .identity-row .name.indent { padding-left:12px; color:var(--dim); }
+  .identity-row .formula { font-size:14px; font-family:var(--mono); color:var(--bright); letter-spacing:0.3px; }
+
+  .mode-grid { display:flex; flex-wrap:wrap; gap:8px; justify-content:center; margin-bottom:16px; }
+  .mode-btn { padding:14px 18px; background:var(--surface); border:1.5px solid var(--border) !important;
+    border-radius:8px; color:var(--mid); font-size:16px; font-weight:400; min-width:105px; }
+  .mode-btn.on { background:var(--gold-bg); border-color:var(--gold) !important; color:var(--gold); font-weight:600; }
+  .mode-btn .desc { font-size:10px; margin-top:4px; color:rgba(0,0,0,0.25); }
+  .mode-btn.on .desc { color:var(--gold-dim); }
+
+  .time-row { display:flex; gap:8px; align-items:center; margin-bottom:16px; }
+  .time-row .label { font-size:14px; color:var(--mid); margin-right:4px; }
+  .time-btn { padding:10px 18px; background:var(--surface); border:1.5px solid var(--border) !important;
+    border-radius:8px; color:var(--dim); font-size:15px; font-weight:400; }
+  .time-btn.on { background:var(--gold-bg); border-color:var(--gold) !important; color:var(--gold); font-weight:600; }
+
+  .toggle-row { font-size:13px; color:var(--mid); margin-bottom:28px; display:flex; align-items:center; gap:8px; }
+  .toggle-row input { accent-color:var(--gold); }
+
+  .start-btn { padding:16px 60px; background:var(--gold); border-radius:8px; color:#fff;
+    font-size:17px; font-weight:700; letter-spacing:2px; text-transform:uppercase; }
+
+  .credit { font-size:11px; color:rgba(0,0,0,0.2); margin-top:32px; text-align:center; line-height:1.8; }
+
+  /* ─── Game ─── */
+  .game-top { position:fixed; top:0; left:0; right:0; display:flex; justify-content:space-between;
+    align-items:center; padding:16px 20px; padding-top: calc(env(safe-area-inset-top, 16px) + 8px);
+    z-index:10; background:linear-gradient(var(--bg), rgba(245,245,248,0)); }
+  .game-score-area { display:flex; align-items:baseline; gap:16px; }
+  .game-score-label { font-size:12px; color:var(--dim); letter-spacing:2px; }
+  .game-score-val { font-size:30px; font-weight:300; color:var(--bright); margin-left:6px; }
+  .game-streak { font-size:15px; color:var(--gold); font-weight:600; }
+  .game-timer-area { display:flex; align-items:center; gap:12px; }
+  .game-timer { font-size:32px; font-weight:300; letter-spacing:2px; color:var(--dim);
+    font-variant-numeric:tabular-nums; font-family:var(--mono); }
+  .game-timer.urgent { color:var(--red); }
+  .finish-btn { padding:8px 18px; background:rgba(0,0,0,0.05); border:1px solid rgba(0,0,0,0.12) !important;
+    border-radius:6px; color:var(--mid); font-size:13px; }
+
+  .game-body { flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; width:100%; }
+
+  .game-ref { position:fixed; bottom:80px; left:20px; font-size:12px; font-family:var(--mono);
+    color:rgba(0,0,0,0.22); line-height:2.0; }
+  .game-ref .ref-label { font-size:10px; letter-spacing:2px; color:rgba(0,0,0,0.3); margin-bottom:4px; font-family:var(--font); }
+
+  .q-mode { font-size:12px; letter-spacing:5px; text-transform:uppercase; color:var(--gold-dim); margin-bottom:20px; font-weight:600; }
+  .q-solve { font-size:clamp(36px, 10vw, 50px); font-weight:300; color:var(--white); margin-bottom:28px; }
+  .q-solve .q-mark { color:var(--gold); }
+
+  .q-givens { margin-bottom:32px; }
+  .q-given-row { display:flex; justify-content:center; align-items:baseline; gap:10px; margin-bottom:10px; }
+  .q-given-key { font-size:clamp(18px, 5vw, 24px); color:var(--mid); min-width:80px; text-align:right; }
+  .q-given-eq { font-size:clamp(18px, 5vw, 24px); color:rgba(0,0,0,0.25); }
+  .q-given-val { font-size:clamp(20px, 5.5vw, 26px); font-family:var(--mono); color:var(--bright); font-weight:600; min-width:80px; text-align:left; }
+
+  .q-input { width:clamp(200px, 60vw, 260px); padding:16px 20px; background:#fff;
+    border:2px solid rgba(0,0,0,0.12); border-radius:8px; color:var(--bright);
+    font-family:var(--mono); font-size:clamp(24px, 6vw, 32px); font-weight:500;
+    text-align:center; outline:none; caret-color:var(--gold); transition: border-color 0.12s;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.06); }
+  .q-input:focus { border-color:var(--gold); }
+  .q-input.correct { border-color:var(--green); background:rgba(26,154,80,0.06); }
+  .q-input.wrong { border-color:var(--red); background:rgba(216,48,48,0.06); }
+
+  .q-feedback { margin-top:16px; font-size:24px; color:var(--red); font-weight:500; font-family:var(--mono); min-height:32px; }
+  .q-tip { margin-top:20px; font-size:13px; color:rgba(0,0,0,0.3); font-style:italic; text-align:center; max-width:400px; min-height:20px; }
+
+  .progress-bar { position:fixed; bottom:0; left:0; right:0; height:3px; background:rgba(0,0,0,0.06); z-index:10; }
+  .progress-fill { height:100%; transition:width 1s linear; }
+
+  /* ─── Results ─── */
+  .results-label { font-size:12px; letter-spacing:6px; color:var(--gold); font-weight:600; text-transform:uppercase; margin-bottom:14px; }
+  .results-score { font-size:clamp(60px, 18vw, 96px); font-weight:200; color:var(--bright); margin-bottom:4px; letter-spacing:-2px; }
+  .results-stats { font-size:17px; color:var(--mid); margin-bottom:8px; }
+  .results-streak { font-size:15px; color:var(--gold-dim); margin-bottom:36px; }
+  .mode-breakdown { display:flex; gap:12px; flex-wrap:wrap; justify-content:center; margin-bottom:36px; }
+  .mode-stat { padding:14px 22px; background:#fff; border:1px solid rgba(0,0,0,0.08); border-radius:8px; text-align:center; min-width:90px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.04); }
+  .mode-stat .ms-label { font-size:10px; letter-spacing:2px; color:var(--dim); text-transform:uppercase; margin-bottom:6px; }
+  .mode-stat .ms-val { font-size:24px; font-weight:300; color:var(--bright); }
+  .mode-stat .ms-val .ms-total { font-size:14px; color:var(--dim); }
+
+  .missed-section { width:100%; max-width:500px; margin-bottom:36px; }
+  .missed-title { font-size:10px; letter-spacing:3px; color:var(--dim); text-transform:uppercase; text-align:center; margin-bottom:10px; }
+  .missed-list { max-height:200px; overflow-y:auto; }
+  .missed-row { display:flex; justify-content:space-between; align-items:center; padding:10px 14px; border-radius:4px; font-size:15px; }
+  .missed-row:nth-child(even) { background:rgba(0,0,0,0.03); }
+  .missed-row .mr-label { color:var(--dim); }
+  .missed-row .mr-yours { color:var(--red); margin-right:18px; text-decoration:line-through; opacity:0.7; }
+  .missed-row .mr-correct { color:var(--green); font-weight:500; }
+
+  .again-btn { padding:16px 60px; background:var(--gold); border-radius:8px; color:#fff;
+    font-size:17px; font-weight:700; letter-spacing:2px; text-transform:uppercase; }
+
+  @media (max-width:480px) {
+    .identity-card { padding:12px 14px; }
+    .identity-row .formula { font-size:12px; }
+    .mode-btn { padding:12px 14px; min-width:80px; font-size:14px; }
+    .game-ref { display:none; }
+    .q-given-key, .q-given-val { min-width:60px; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ═══ MENU ═══ -->
+<div id="menuScreen" class="screen active">
+  <div class="menu-label">Put-Call Parity</div>
+  <div class="menu-title">Parity Drill</div>
+  <div class="menu-sub">Speed drill · solve for the missing variable</div>
+
+  <div class="identity-card">
+    <h3>Core Identities</h3>
+    <div class="identity-row"><span class="name">Parity</span><span class="formula">C − P = S + r/c − K</span></div>
+    <div class="identity-row"><span class="name">Combo</span><span class="formula">Combo = C − P = S + r/c − K</span></div>
+    <div class="identity-row"><span class="name">Straddle</span><span class="formula">Straddle = C + P</span></div>
+    <div class="identity-row"><span class="name indent">→ Solve C</span><span class="formula">C = (Str + Combo) / 2</span></div>
+    <div class="identity-row"><span class="name indent">→ Solve P</span><span class="formula">P = (Str − Combo) / 2</span></div>
+    <div class="identity-row"><span class="name">Buy/Write</span><span class="formula">B/W = C − intrinsic = P + r/c</span></div>
+  </div>
+
+  <div class="mode-grid" id="modeGrid"></div>
+
+  <div class="time-row" id="timeRow">
+    <span class="label">Time:</span>
+  </div>
+
+  <label class="toggle-row">
+    <input type="checkbox" id="showIdToggle" checked>
+    Show identities &amp; tips during game
+  </label>
+
+  <button class="start-btn" onclick="startGame()">Start</button>
+  <div class="credit">Inspired by the SIG parity game &amp; Kris Abdelmessih's Moontower</div>
+</div>
+
+<!-- ═══ GAME ═══ -->
+<div id="gameScreen" class="screen">
+  <div class="game-top">
+    <div class="game-score-area">
+      <div>
+        <span class="game-score-label">SCORE</span>
+        <span class="game-score-val" id="gScore">0</span>
+      </div>
+      <span class="game-streak" id="gStreak"></span>
+    </div>
+    <div class="game-timer-area">
+      <button class="finish-btn" id="finishBtn" onclick="endGame()" style="display:none">Finish</button>
+      <div class="game-timer" id="gTimer">2:00</div>
+    </div>
+  </div>
+
+  <div class="game-ref" id="gameRef">
+    <div class="ref-label">REF</div>
+    C − P = S + r/c − K<br>
+    Combo = C − P<br>
+    Straddle = C + P<br>
+    B/W = C − intrinsic
+  </div>
+
+  <div class="game-body">
+    <div class="q-mode" id="qMode"></div>
+    <div class="q-solve" id="qSolve"></div>
+    <div class="q-givens" id="qGivens"></div>
+    <form onsubmit="handleSubmit(event)">
+      <input type="text" class="q-input" id="qInput" inputmode="decimal" autocomplete="off" placeholder="—">
+    </form>
+    <div class="q-feedback" id="qFeedback"></div>
+    <div class="q-tip" id="qTip"></div>
+  </div>
+
+  <div class="progress-bar" id="progressBar">
+    <div class="progress-fill" id="progressFill" style="width:100%"></div>
+  </div>
+</div>
+
+<!-- ═══ RESULTS ═══ -->
+<div id="resultsScreen" class="screen">
+  <div class="results-label" id="rLabel">Time's Up</div>
+  <div class="results-score" id="rScore">0</div>
+  <div class="results-stats" id="rStats"></div>
+  <div class="results-streak" id="rStreak"></div>
+  <div class="mode-breakdown" id="rBreakdown"></div>
+  <div class="missed-section" id="rMissed"></div>
+  <button class="again-btn" onclick="goMenu()">Play Again</button>
+</div>
+
+<script>
+// ─── State ───────────────────────────────────────────────────────
+const MODES = [
+  { id:'putcall', label:'Put-Call', desc:'C, P, S, r/c' },
+  { id:'combo', label:'Combo', desc:'Combo ↔ option' },
+  { id:'straddle', label:'Straddle', desc:'Straddle → C or P' },
+  { id:'buywrite', label:'B/W', desc:'Buy/Write → C or P' },
+];
+const TIMES = [
+  { label:'1 min', sec:60 },
+  { label:'2 min', sec:120 },
+  { label:'4 min', sec:240 },
+  { label:'∞', sec:null },
+];
+
+let activeModes = new Set(['putcall']);
+let duration = 120;
+let showIdentities = true;
+let score = 0, streak = 0, bestStreak = 0, elapsed = 0, timeLeft = 120;
+let question = null, feedback = null, history = [];
+let timerInterval = null;
+
+// ─── Helpers ─────────────────────────────────────────────────────
+const ri = (a,b) => Math.floor(Math.random()*(b-a+1))+a;
+const rp = (a,b) => parseFloat((Math.random()*(b-a)+a).toFixed(2));
+const r2 = v => parseFloat(v.toFixed(2));
+
+// ─── Generators ──────────────────────────────────────────────────
+function genPutCall(){
+  const K=ri(2,20)*5, S=r2(K+rp(-8,8)), rc=r2(rp(0.05,0.40)), combo=r2(S+rc-K), p=Math.random();
+  if(p<0.25){ const P=r2(rp(0.20,5)),C=r2(P+combo); if(C<0.01)return genPutCall(); return{given:{P,"r/c":rc,S,K},solve:"C",answer:C}; }
+  if(p<0.5){ const C=r2(rp(0.20,6)),P=r2(C-combo); if(P<0.01)return genPutCall(); return{given:{C,"r/c":rc,S,K},solve:"P",answer:P}; }
+  if(p<0.75){ const P=r2(rp(0.20,5)),C=r2(P+combo); if(C<0.01)return genPutCall(); return{given:{C,P,"r/c":rc,K},solve:"S",answer:S}; }
+  const P=r2(rp(0.20,5)),C=r2(P+combo); if(C<0.01)return genPutCall(); return{given:{C,P,S,K},solve:"r/c",answer:rc};
+}
+function genCombo(){
+  const K=ri(2,20)*5, S=r2(K+rp(-8,8)), rc=r2(rp(0.05,0.40)), combo=r2(S+rc-K);
+  const P=r2(rp(0.20,5)),C=r2(P+combo); if(C<0.01)return genCombo();
+  return Math.random()<0.5 ? {given:{P,Combo:combo},solve:"C",answer:C} : {given:{C,Combo:combo},solve:"P",answer:P};
+}
+function genStraddle(){
+  const K=ri(2,20)*5, S=r2(K+rp(-8,8)), rc=r2(rp(0.05,0.40)), combo=r2(S+rc-K);
+  const P=r2(rp(0.30,5)),C=r2(P+combo); if(C<0.01)return genStraddle();
+  const str=r2(C+P);
+  return Math.random()<0.5 ? {given:{Straddle:str,"r/c":rc,S,K},solve:"C",answer:C} : {given:{Straddle:str,"r/c":rc,S,K},solve:"P",answer:P};
+}
+function genBuyWrite(){
+  const K=ri(2,20)*5, S=r2(K+rp(0.5,12)), rc=r2(rp(0.05,0.40)), combo=r2(S+rc-K);
+  const P=r2(rp(0.20,4)),C=r2(P+combo); if(C<0.1)return genBuyWrite();
+  const intr=Math.max(0,r2(S-K)), bw=r2(C-intr); if(bw<0.05)return genBuyWrite();
+  return Math.random()<0.5 ? {given:{"B/W":bw,"r/c":rc,S,K},solve:"C",answer:C} : {given:{"B/W":bw,"r/c":rc,S,K},solve:"P",answer:P};
+}
+const gens = { putcall:genPutCall, combo:genCombo, straddle:genStraddle, buywrite:genBuyWrite };
+
+function getTip(q){
+  const s=q.solve, g=q.given;
+  if(g.Combo!==undefined){ if(s==="C")return"C = P + Combo"; if(s==="P")return"P = C − Combo"; }
+  if(g.Straddle!==undefined){ if(s==="C")return"Combo = S+r/c−K → C = (Str+Combo)/2"; if(s==="P")return"Combo = S+r/c−K → P = (Str−Combo)/2"; }
+  if(g["B/W"]!==undefined){ if(s==="C")return"C = max(S−K, 0) + B/W"; if(s==="P")return"C = max(S−K,0)+B/W → P = C−(S+r/c−K)"; }
+  if(s==="C")return"C = P + (S + r/c − K)"; if(s==="P")return"P = C − (S + r/c − K)";
+  if(s==="S")return"S = C − P + K − r/c"; if(s==="r/c")return"r/c = C − P − S + K";
+  return"";
+}
+
+// ─── Screen Management ──────────────────────────────────────────
+function showScreen(id){
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+}
+
+// ─── Build Menu ─────────────────────────────────────────────────
+function buildMenu(){
+  const mg = document.getElementById('modeGrid');
+  mg.innerHTML = '';
+  MODES.forEach(m=>{
+    const btn = document.createElement('button');
+    btn.className = 'mode-btn' + (activeModes.has(m.id)?' on':'');
+    btn.innerHTML = m.label + '<div class="desc">'+m.desc+'</div>';
+    btn.onclick = ()=>{ if(activeModes.has(m.id)&&activeModes.size>1)activeModes.delete(m.id); else activeModes.add(m.id); buildMenu(); };
+    mg.appendChild(btn);
+  });
+
+  const tr = document.getElementById('timeRow');
+  tr.innerHTML = '<span class="label">Time:</span>';
+  TIMES.forEach(t=>{
+    const btn = document.createElement('button');
+    btn.className = 'time-btn' + (duration===t.sec?' on':'');
+    btn.textContent = t.label;
+    btn.onclick = ()=>{ duration=t.sec; buildMenu(); };
+    tr.appendChild(btn);
+  });
+}
+
+// ─── Game Logic ─────────────────────────────────────────────────
+function newQuestion(){
+  const pool = [...activeModes];
+  const modeId = pool[Math.floor(Math.random()*pool.length)];
+  const mode = MODES.find(m=>m.id===modeId);
+  question = gens[modeId]();
+  question.mode = mode.label;
+  feedback = null;
+  renderQuestion();
+}
+
+function renderQuestion(){
+  document.getElementById('qMode').textContent = question.mode;
+  document.getElementById('qSolve').innerHTML = question.solve + ' = <span class="q-mark">?</span>';
+
+  const gDiv = document.getElementById('qGivens');
+  gDiv.innerHTML = '';
+  Object.entries(question.given).forEach(([k,v])=>{
+    gDiv.innerHTML += `<div class="q-given-row"><span class="q-given-key">${k}</span><span class="q-given-eq">=</span><span class="q-given-val">${v}</span></div>`;
+  });
+
+  const inp = document.getElementById('qInput');
+  inp.value = '';
+  inp.className = 'q-input';
+  inp.disabled = false;
+  inp.focus();
+
+  document.getElementById('qFeedback').textContent = '';
+  document.getElementById('qTip').textContent = showIdentities ? getTip(question) : '';
+}
+
+function handleSubmit(e){
+  e.preventDefault();
+  const inp = document.getElementById('qInput');
+  const val = parseFloat(inp.value);
+  if(isNaN(val)||feedback!==null) return;
+
+  const correct = Math.abs(val - question.answer) < 0.015;
+  history.push({ ...question, userAnswer:val, correct });
+
+  if(correct){
+    score++;
+    streak++;
+    if(streak>bestStreak) bestStreak=streak;
+    inp.className = 'q-input correct';
+    document.getElementById('gScore').textContent = score;
+    document.getElementById('gStreak').textContent = streak>=3 ? '🔥 '+streak+'×' : '';
+    feedback = 'correct';
+    setTimeout(newQuestion, 180);
+  } else {
+    streak = 0;
+    inp.className = 'q-input wrong';
+    inp.disabled = true;
+    document.getElementById('qFeedback').textContent = question.answer;
+    document.getElementById('gStreak').textContent = '';
+    feedback = question.answer;
+    setTimeout(newQuestion, 1400);
+  }
+}
+
+function updateTimer(){
+  elapsed++;
+  const isUnlimited = duration===null;
+
+  if(!isUnlimited){
+    timeLeft--;
+    const pct = (timeLeft / duration) * 100;
+    const fill = document.getElementById('progressFill');
+    fill.style.width = pct+'%';
+    fill.style.background = timeLeft<=15 ? 'var(--red)' : 'linear-gradient(90deg, var(--gold-dim), var(--gold))';
+
+    const timer = document.getElementById('gTimer');
+    timer.className = 'game-timer' + (timeLeft<=15?' urgent':'');
+    const m=Math.floor(timeLeft/60), s=timeLeft%60;
+    timer.textContent = m+':'+String(s).padStart(2,'0');
+
+    if(timeLeft<=0) endGame();
+  } else {
+    const m=Math.floor(elapsed/60), s=elapsed%60;
+    document.getElementById('gTimer').textContent = '▲ '+m+':'+String(s).padStart(2,'0');
+  }
+}
+
+function startGame(){
+  showIdentities = document.getElementById('showIdToggle').checked;
+  score=0; streak=0; bestStreak=0; elapsed=0; history=[]; feedback=null;
+  timeLeft = duration||0;
+
+  const isUnlimited = duration===null;
+  document.getElementById('gScore').textContent = '0';
+  document.getElementById('gStreak').textContent = '';
+  document.getElementById('finishBtn').style.display = isUnlimited?'block':'none';
+  document.getElementById('progressBar').style.display = isUnlimited?'none':'block';
+  document.getElementById('progressFill').style.width = '100%';
+  document.getElementById('progressFill').style.background = 'linear-gradient(90deg, var(--gold-dim), var(--gold))';
+
+  const ref = document.getElementById('gameRef');
+  ref.style.display = showIdentities?'block':'none';
+
+  if(!isUnlimited){
+    const m=Math.floor(timeLeft/60), s=timeLeft%60;
+    document.getElementById('gTimer').textContent = m+':'+String(s).padStart(2,'0');
+    document.getElementById('gTimer').className = 'game-timer';
+  } else {
+    document.getElementById('gTimer').textContent = '▲ 0:00';
+    document.getElementById('gTimer').className = 'game-timer';
+  }
+
+  showScreen('gameScreen');
+  newQuestion();
+  if(timerInterval) clearInterval(timerInterval);
+  timerInterval = setInterval(updateTimer, 1000);
+}
+
+function endGame(){
+  if(timerInterval){ clearInterval(timerInterval); timerInterval=null; }
+  renderResults();
+  showScreen('resultsScreen');
+}
+
+function renderResults(){
+  const correct = history.filter(h=>h.correct).length;
+  const total = history.length;
+  const acc = total>0 ? Math.round((correct/total)*100) : 0;
+  const em=Math.floor(elapsed/60), es=elapsed%60;
+
+  document.getElementById('rLabel').textContent = duration===null ? 'Session Complete' : "Time's Up";
+  document.getElementById('rScore').textContent = score;
+  document.getElementById('rStats').textContent = correct+' / '+total+' correct · '+acc+'%' + (duration===null ? ' · '+em+':'+String(es).padStart(2,'0') : '');
+  document.getElementById('rStreak').textContent = 'Best streak: '+bestStreak;
+
+  const byMode = {};
+  history.forEach(h=>{ if(!byMode[h.mode])byMode[h.mode]={c:0,t:0}; byMode[h.mode].t++; if(h.correct)byMode[h.mode].c++; });
+  const bd = document.getElementById('rBreakdown');
+  bd.innerHTML = '';
+  Object.entries(byMode).forEach(([mode,s])=>{
+    bd.innerHTML += `<div class="mode-stat"><div class="ms-label">${mode}</div><div class="ms-val">${s.c}<span class="ms-total"> / ${s.t}</span></div></div>`;
+  });
+
+  const missed = history.filter(h=>!h.correct);
+  const ms = document.getElementById('rMissed');
+  if(missed.length===0){ ms.innerHTML=''; return; }
+  let html = '<div class="missed-title">Review — Missed</div><div class="missed-list">';
+  missed.forEach((h,i)=>{
+    html += `<div class="missed-row"><span class="mr-label">${h.mode} → ${h.solve}</span><span><span class="mr-yours">${h.userAnswer}</span><span class="mr-correct">${h.answer}</span></span></div>`;
+  });
+  html += '</div>';
+  ms.innerHTML = html;
+}
+
+function goMenu(){
+  showScreen('menuScreen');
+  buildMenu();
+}
+
+// ─── Init ────────────────────────────────────────────────────────
+buildMenu();
+</script>
+</body>
+</html>
