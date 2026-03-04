@@ -183,7 +183,8 @@
   .mobile-only { display:none; }
   .desktop-only { display:block; }
 
-  @media (max-width:480px) {
+  /* Mobile: touch devices up to tablet width */
+  @media (max-width:768px), (hover:none) and (pointer:coarse) {
     .identity-card { padding:12px 14px; }
     .identity-row .formula { font-size:12px; }
     .mode-btn { padding:12px 14px; min-width:80px; font-size:14px; }
@@ -191,7 +192,7 @@
     .q-given-key, .q-given-val { min-width:60px; }
     .q-givens { margin-bottom:12px; }
     .q-given-row { margin-bottom:6px; }
-    .q-solve { margin-bottom:14px; }
+    .q-solve { margin-bottom:14px; font-size:38px; }
     .q-mode { margin-bottom:10px; }
     .keypad { display:grid; }
     .desktop-input-wrap { display:none; }
@@ -213,7 +214,16 @@
       justify-content:flex-start;
     }
   }
-  @media (min-width:481px) {
+
+  /* Desktop: mouse/trackpad devices wider than tablet */
+  @media (min-width:769px) and (hover:hover) and (pointer:fine) {
+    .q-display-row { display:none; }
+    .answer-area { position:static; background:none; padding:0; }
+    .mobile-only { display:none !important; }
+  }
+
+  /* Fallback for wide screens that somehow match neither */
+  @media (min-width:769px) {
     .q-display-row { display:none; }
     .answer-area { position:static; background:none; padding:0; }
     .mobile-only { display:none !important; }
