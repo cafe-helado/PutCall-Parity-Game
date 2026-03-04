@@ -94,8 +94,7 @@
   .finish-btn { padding:8px 18px; background:rgba(0,0,0,0.05); border:1px solid rgba(0,0,0,0.12) !important;
     border-radius:6px; color:var(--mid); font-size:13px; }
 
-  .game-body { flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; width:100%;
-    padding-bottom:clamp(180px, 40vh, 280px); }
+  .game-body { flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; width:100%; }
 
   .game-ref { position:fixed; top:70px; left:20px; font-size:12px; font-family:var(--mono);
     color:rgba(0,0,0,0.22); line-height:2.0; }
@@ -111,18 +110,21 @@
   .q-given-eq { font-size:clamp(18px, 5vw, 24px); color:rgba(0,0,0,0.25); }
   .q-given-val { font-size:clamp(20px, 5.5vw, 26px); font-family:var(--mono); color:var(--bright); font-weight:600; min-width:80px; text-align:left; }
 
+  /* Answer area — on desktop it's inline, on mobile it's fixed above keypad */
+  .answer-area { display:flex; flex-direction:column; align-items:center; }
+
   .q-display-row { display:flex; justify-content:center; margin-bottom:8px; }
   .q-display { width:clamp(200px, 60vw, 260px); padding:14px 20px; background:#fff;
     border:2px solid rgba(0,0,0,0.12); border-radius:8px; color:var(--bright);
     font-family:var(--mono); font-size:clamp(24px, 6vw, 32px); font-weight:500;
-    text-align:center; min-height:60px; display:flex; align-items:center; justify-content:center;
+    text-align:center; min-height:56px; display:flex; align-items:center; justify-content:center;
     box-shadow: 0 1px 3px rgba(0,0,0,0.06); transition: border-color 0.12s; }
   .q-display.correct { border-color:var(--green); background:rgba(26,154,80,0.06); }
   .q-display.wrong { border-color:var(--red); background:rgba(216,48,48,0.06); }
   .q-display.empty { color:var(--dim); }
 
-  .q-feedback { margin-top:8px; font-size:22px; color:var(--red); font-weight:500; font-family:var(--mono); min-height:30px; text-align:center; }
-  .q-tip { margin-top:8px; font-size:13px; color:rgba(0,0,0,0.3); font-style:italic; text-align:center; max-width:400px; min-height:18px; }
+  .q-feedback { font-size:20px; color:var(--red); font-weight:500; font-family:var(--mono); min-height:26px; text-align:center; margin-top:6px; }
+  .q-tip { font-size:12px; color:rgba(0,0,0,0.35); font-style:italic; text-align:center; max-width:340px; min-height:16px; margin-top:4px; }
 
   /* Keypad - hidden on desktop, shown on mobile */
   .keypad { position:fixed; bottom:0; left:0; right:0; display:none;
@@ -177,22 +179,44 @@
   .again-btn { padding:16px 60px; background:var(--gold); border-radius:8px; color:#fff;
     font-size:17px; font-weight:700; letter-spacing:2px; text-transform:uppercase; }
 
+  /* Visibility helpers */
+  .mobile-only { display:none; }
+  .desktop-only { display:block; }
+
   @media (max-width:480px) {
     .identity-card { padding:12px 14px; }
     .identity-row .formula { font-size:12px; }
     .mode-btn { padding:12px 14px; min-width:80px; font-size:14px; }
     .game-ref { display:none; }
     .q-given-key, .q-given-val { min-width:60px; }
-    .q-givens { margin-bottom:20px; }
-    .q-solve { margin-bottom:18px; }
-    .q-mode { margin-bottom:12px; }
+    .q-givens { margin-bottom:12px; }
+    .q-given-row { margin-bottom:6px; }
+    .q-solve { margin-bottom:14px; }
+    .q-mode { margin-bottom:10px; }
     .keypad { display:grid; }
     .desktop-input-wrap { display:none; }
+    .desktop-only { display:none; }
+    .mobile-only { display:block; }
     .q-display-row { display:flex; }
-    .game-body { padding-bottom:clamp(180px, 40vh, 280px); }
+
+    /* Fix the answer area right above the keypad */
+    .answer-area {
+      position:fixed; bottom:230px;
+      left:0; right:0; z-index:21;
+      background:var(--bg); padding:6px 16px 2px; display:flex; flex-direction:column; align-items:center;
+    }
+
+    /* Question area fills remaining space */
+    .game-body {
+      padding-top:70px;
+      padding-bottom:380px;
+      justify-content:flex-start;
+    }
   }
   @media (min-width:481px) {
     .q-display-row { display:none; }
+    .answer-area { position:static; background:none; padding:0; }
+    .mobile-only { display:none !important; }
   }
 </style>
 </head>
@@ -257,16 +281,21 @@
     <div class="q-mode" id="qMode"></div>
     <div class="q-solve" id="qSolve"></div>
     <div class="q-givens" id="qGivens"></div>
-    <div class="q-display-row">
-      <div class="q-display" id="qDisplay">—</div>
-    </div>
     <div class="desktop-input-wrap">
       <form onsubmit="handleDesktopSubmit(event)">
         <input type="text" class="q-input-desktop" id="qInputDesktop" autocomplete="off" placeholder="—">
       </form>
     </div>
-    <div class="q-feedback" id="qFeedback"></div>
-    <div class="q-tip" id="qTip"></div>
+    <div class="q-feedback desktop-only" id="qFeedbackDesktop"></div>
+    <div class="q-tip desktop-only" id="qTipDesktop"></div>
+  </div>
+
+  <div class="answer-area" id="answerArea">
+    <div class="q-tip mobile-only" id="qTipMobile"></div>
+    <div class="q-display-row">
+      <div class="q-display" id="qDisplay">—</div>
+    </div>
+    <div class="q-feedback mobile-only" id="qFeedbackMobile"></div>
   </div>
 
   <div class="keypad" id="keypad">
@@ -438,8 +467,14 @@ function renderQuestion(){
   const dInp = document.getElementById('qInputDesktop');
   if(dInp){ dInp.value=''; dInp.className='q-input-desktop'; dInp.disabled=false; dInp.focus(); }
 
-  document.getElementById('qFeedback').textContent = '';
-  document.getElementById('qTip').textContent = showIdentities ? getTip(question) : '';
+  // Clear feedback on both
+  document.getElementById('qFeedbackDesktop').textContent = '';
+  document.getElementById('qFeedbackMobile').textContent = '';
+
+  // Set tip on both
+  const tip = showIdentities ? getTip(question) : '';
+  document.getElementById('qTipDesktop').textContent = tip;
+  document.getElementById('qTipMobile').textContent = tip;
 }
 
 function submitAnswer(val){
@@ -465,7 +500,8 @@ function submitAnswer(val){
     streak = 0;
     d.className = 'q-display wrong';
     if(dInp){ dInp.className = 'q-input-desktop wrong'; dInp.disabled = true; }
-    document.getElementById('qFeedback').textContent = question.answer;
+    document.getElementById('qFeedbackDesktop').textContent = question.answer;
+    document.getElementById('qFeedbackMobile').textContent = question.answer;
     document.getElementById('gStreak').textContent = '';
     feedback = question.answer;
     setTimeout(newQuestion, 1400);
