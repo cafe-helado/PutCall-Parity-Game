@@ -108,7 +108,7 @@
   .q-given-val { font-size:21px; font-family:var(--mono); color:var(--bright); font-weight:600; min-width:60px; text-align:left; }
 
   /* Tip line — shows the relevant identity */
-  .q-tip { font-size:12px; color:var(--gold-dim); font-style:italic; text-align:center; margin-bottom:10px; min-height:16px; font-family:var(--mono); }
+  .q-tip { font-size:12px; color:var(--gold-dim); font-style:italic; text-align:center; margin-top:10px; min-height:16px; font-family:var(--mono); }
 
   /* Answer display with overlay for correct answer */
   .input-area { position:relative; margin-bottom:4px; }
@@ -282,11 +282,11 @@
     <div class="q-mode" id="qMode"></div>
     <div class="q-solve" id="qSolve"></div>
     <div class="q-givens" id="qGivens"></div>
-    <div class="q-tip" id="qTip"></div>
     <div class="input-area">
       <div class="q-display" id="qDisplay">—</div>
       <div class="q-overlay" id="qOverlay"></div>
     </div>
+    <div class="q-tip" id="qTip"></div>
     <div class="desktop-input-wrap">
       <form onsubmit="handleDesktopSubmit(event)">
         <input type="text" class="q-input-desktop" id="qInputDesktop" autocomplete="off" placeholder="—">
