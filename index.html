@@ -26,147 +26,165 @@
     --font: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI', Helvetica, Arial, sans-serif;
     --mono: 'SF Mono', 'Menlo', 'Consolas', 'Monaco', monospace;
   }
-  html { height:100%; background:var(--bg); color:var(--bright); font-family:var(--font); }
-  body { min-height:100%; min-height:100dvh; background:var(--bg); display:flex; flex-direction:column; overflow-x:hidden; }
-  input[type="text"], input[type="number"] {
-    -webkit-appearance:none; appearance:none; border-radius:8px;
-  }
-  button { cursor:pointer; border:none; font-family:var(--font); transition: all 0.12s ease; }
+  html, body { height:100%; background:var(--bg); color:var(--bright); font-family:var(--font); margin:0; }
+  button { cursor:pointer; border:none; font-family:var(--font); transition:all 0.12s ease; }
   button:active { transform:scale(0.97); }
+  input[type="text"] { -webkit-appearance:none; appearance:none; border-radius:8px; }
 
   /* ─── Screens ─── */
-  .screen { display:none; flex-direction:column; align-items:center; justify-content:center;
-    min-height:100vh; min-height:100dvh; padding:24px; padding-top: env(safe-area-inset-top, 20px);
-    padding-bottom: env(safe-area-inset-bottom, 20px); overflow-y:auto; }
+  .screen { display:none; }
   .screen.active { display:flex; }
 
   /* ─── Menu ─── */
+  #menuScreen {
+    flex-direction:column; align-items:center; justify-content:center;
+    min-height:100vh; min-height:100dvh; padding:24px;
+    padding-top:env(safe-area-inset-top, 20px); padding-bottom:env(safe-area-inset-bottom, 20px);
+  }
   .menu-label { font-size:12px; letter-spacing:5px; color:var(--gold); font-weight:600; text-transform:uppercase; margin-bottom:10px; }
   .menu-title { font-size:clamp(36px, 8vw, 52px); font-weight:300; color:var(--white); margin-bottom:4px; }
   .menu-sub { font-size:15px; color:var(--mid); margin-bottom:28px; }
-
   .identity-card {
     background:#fff; border:1px solid rgba(0,0,0,0.08); border-radius:10px;
     padding:16px 20px; margin-bottom:24px; width:100%; max-width:520px;
-    box-shadow: 0 1px 4px rgba(0,0,0,0.05);
+    box-shadow:0 1px 4px rgba(0,0,0,0.05);
   }
   .identity-card h3 { font-size:10px; letter-spacing:3px; text-transform:uppercase; color:var(--dim); margin-bottom:10px; font-weight:600; }
-  .identity-row { display:flex; justify-content:space-between; align-items:center; padding:6px 0;
-    border-bottom:1px solid rgba(0,0,0,0.05); }
+  .identity-row { display:flex; justify-content:space-between; align-items:center; padding:6px 0; border-bottom:1px solid rgba(0,0,0,0.05); }
   .identity-row:last-child { border-bottom:none; }
   .identity-row .name { font-size:13px; color:var(--mid); min-width:80px; }
   .identity-row .name.indent { padding-left:12px; color:var(--dim); }
   .identity-row .formula { font-size:14px; font-family:var(--mono); color:var(--bright); letter-spacing:0.3px; }
-
   .mode-grid { display:flex; flex-wrap:wrap; gap:8px; justify-content:center; margin-bottom:16px; }
   .mode-btn { padding:14px 18px; background:var(--surface); border:1.5px solid var(--border) !important;
     border-radius:8px; color:var(--mid); font-size:16px; font-weight:400; min-width:105px; }
   .mode-btn.on { background:var(--gold-bg); border-color:var(--gold) !important; color:var(--gold); font-weight:600; }
   .mode-btn .desc { font-size:10px; margin-top:4px; color:rgba(0,0,0,0.25); }
   .mode-btn.on .desc { color:var(--gold-dim); }
-
   .time-row { display:flex; gap:8px; align-items:center; margin-bottom:16px; }
   .time-row .label { font-size:14px; color:var(--mid); margin-right:4px; }
   .time-btn { padding:10px 18px; background:var(--surface); border:1.5px solid var(--border) !important;
     border-radius:8px; color:var(--dim); font-size:15px; font-weight:400; }
   .time-btn.on { background:var(--gold-bg); border-color:var(--gold) !important; color:var(--gold); font-weight:600; }
-
   .toggle-row { font-size:13px; color:var(--mid); margin-bottom:28px; display:flex; align-items:center; gap:8px; }
   .toggle-row input { accent-color:var(--gold); }
-
   .start-btn { padding:16px 60px; background:var(--gold); border-radius:8px; color:#fff;
     font-size:17px; font-weight:700; letter-spacing:2px; text-transform:uppercase; }
-
   .credit { font-size:11px; color:rgba(0,0,0,0.2); margin-top:32px; text-align:center; line-height:1.8; }
 
-  /* ─── Game ─── */
-  .game-top { position:fixed; top:0; left:0; right:0; display:flex; justify-content:space-between;
-    align-items:center; padding:16px 20px; padding-top: calc(env(safe-area-inset-top, 16px) + 8px);
-    z-index:10; background:linear-gradient(var(--bg), rgba(245,245,248,0)); }
-  .game-score-area { display:flex; align-items:baseline; gap:16px; }
-  .game-score-label { font-size:12px; color:var(--dim); letter-spacing:2px; }
-  .game-score-val { font-size:30px; font-weight:300; color:var(--bright); margin-left:6px; }
-  .game-streak { font-size:15px; color:var(--gold); font-weight:600; }
-  .game-timer-area { display:flex; align-items:center; gap:12px; }
-  .game-timer { font-size:32px; font-weight:300; letter-spacing:2px; color:var(--dim);
+  /* ═══ GAME — uses natural flex column, NO fixed positioning ═══ */
+  #gameScreen {
+    flex-direction:column; height:100vh; height:100dvh; overflow:hidden;
+  }
+
+  .game-top {
+    flex-shrink:0; display:flex; justify-content:space-between; align-items:center;
+    padding:10px 16px; padding-top:calc(env(safe-area-inset-top, 10px) + 4px);
+  }
+  .game-score-area { display:flex; align-items:baseline; gap:12px; }
+  .game-score-label { font-size:11px; color:var(--dim); letter-spacing:2px; }
+  .game-score-val { font-size:26px; font-weight:300; color:var(--bright); margin-left:4px; }
+  .game-streak { font-size:14px; color:var(--gold); font-weight:600; }
+  .game-timer-area { display:flex; align-items:center; gap:10px; }
+  .game-timer { font-size:24px; font-weight:300; letter-spacing:2px; color:var(--dim);
     font-variant-numeric:tabular-nums; font-family:var(--mono); }
   .game-timer.urgent { color:var(--red); }
-  .finish-btn { padding:8px 18px; background:rgba(0,0,0,0.05); border:1px solid rgba(0,0,0,0.12) !important;
-    border-radius:6px; color:var(--mid); font-size:13px; }
+  .finish-btn { padding:6px 14px; background:rgba(0,0,0,0.05); border:1px solid rgba(0,0,0,0.12) !important;
+    border-radius:6px; color:var(--mid); font-size:12px; }
 
-  .game-body { flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; width:100%; }
+  /* Middle area: fills space between top bar and keypad */
+  .game-mid {
+    flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center;
+    padding:0 20px; min-height:0;
+  }
 
-  .game-ref { position:fixed; top:70px; left:20px; font-size:12px; font-family:var(--mono);
-    color:rgba(0,0,0,0.22); line-height:2.0; }
-  .game-ref .ref-label { font-size:10px; letter-spacing:2px; color:rgba(0,0,0,0.3); margin-bottom:4px; font-family:var(--font); }
-
-  .q-mode { font-size:12px; letter-spacing:5px; text-transform:uppercase; color:var(--gold-dim); margin-bottom:20px; font-weight:600; }
-  .q-solve { font-size:clamp(36px, 10vw, 50px); font-weight:300; color:var(--white); margin-bottom:28px; }
+  .q-mode { font-size:11px; letter-spacing:4px; text-transform:uppercase; color:var(--gold-dim); margin-bottom:8px; font-weight:600; }
+  .q-solve { font-size:36px; font-weight:300; color:var(--white); margin-bottom:12px; }
   .q-solve .q-mark { color:var(--gold); }
+  .q-givens { margin-bottom:10px; }
+  .q-given-row { display:flex; justify-content:center; align-items:baseline; gap:8px; margin-bottom:5px; }
+  .q-given-key { font-size:19px; color:var(--mid); min-width:60px; text-align:right; }
+  .q-given-eq { font-size:19px; color:rgba(0,0,0,0.2); }
+  .q-given-val { font-size:21px; font-family:var(--mono); color:var(--bright); font-weight:600; min-width:60px; text-align:left; }
 
-  .q-givens { margin-bottom:32px; }
-  .q-given-row { display:flex; justify-content:center; align-items:baseline; gap:10px; margin-bottom:10px; }
-  .q-given-key { font-size:clamp(18px, 5vw, 24px); color:var(--mid); min-width:80px; text-align:right; }
-  .q-given-eq { font-size:clamp(18px, 5vw, 24px); color:rgba(0,0,0,0.25); }
-  .q-given-val { font-size:clamp(20px, 5.5vw, 26px); font-family:var(--mono); color:var(--bright); font-weight:600; min-width:80px; text-align:left; }
+  /* Tip line — shows the relevant identity */
+  .q-tip { font-size:12px; color:var(--gold-dim); font-style:italic; text-align:center; margin-bottom:10px; min-height:16px; font-family:var(--mono); }
 
-  /* Answer area — on desktop it's inline, on mobile it's fixed above keypad */
-  .answer-area { display:flex; flex-direction:column; align-items:center; }
-
-  .q-display-row { display:flex; justify-content:center; margin-bottom:8px; }
-  .q-display { width:clamp(200px, 60vw, 260px); padding:14px 20px; background:#fff;
+  /* Answer display with overlay for correct answer */
+  .input-area { position:relative; margin-bottom:4px; }
+  .q-display { width:200px; padding:10px 16px; background:#fff;
     border:2px solid rgba(0,0,0,0.12); border-radius:8px; color:var(--bright);
-    font-family:var(--mono); font-size:clamp(24px, 6vw, 32px); font-weight:500;
-    text-align:center; min-height:56px; display:flex; align-items:center; justify-content:center;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.06); transition: border-color 0.12s; }
+    font-family:var(--mono); font-size:26px; font-weight:500;
+    text-align:center; min-height:48px; display:flex; align-items:center; justify-content:center;
+    box-shadow:0 1px 3px rgba(0,0,0,0.06); transition:border-color 0.12s; }
   .q-display.correct { border-color:var(--green); background:rgba(26,154,80,0.06); }
   .q-display.wrong { border-color:var(--red); background:rgba(216,48,48,0.06); }
   .q-display.empty { color:var(--dim); }
 
-  .q-feedback { font-size:20px; color:var(--red); font-weight:500; font-family:var(--mono); min-height:26px; text-align:center; margin-top:6px; }
-  .q-tip { font-size:12px; color:rgba(0,0,0,0.35); font-style:italic; text-align:center; max-width:340px; min-height:16px; margin-top:4px; }
+  /* Correct answer flashes ON TOP of display — no extra vertical space */
+  .q-overlay {
+    position:absolute; top:0; left:0; right:0; bottom:0;
+    display:none; align-items:center; justify-content:center;
+    background:rgba(255,240,240,0.95); border:2px solid var(--red); border-radius:8px;
+    font-family:var(--mono); font-size:26px; font-weight:700; color:var(--red);
+  }
+  .q-overlay.show { display:flex; }
 
-  /* Keypad - hidden on desktop, shown on mobile */
-  .keypad { position:fixed; bottom:0; left:0; right:0; display:none;
-    grid-template-columns:repeat(3, 1fr); gap:1px; background:rgba(0,0,0,0.08);
-    padding-bottom:env(safe-area-inset-bottom, 0); z-index:20; }
-  .kp-btn { padding:clamp(14px, 3.5vh, 22px) 0; background:#fff; border:none !important; color:var(--bright);
-    font-family:var(--font); font-size:clamp(20px, 5vw, 26px); font-weight:500;
+  /* Keypad — natural flex child, sits at bottom */
+  .keypad {
+    flex-shrink:0; display:grid; grid-template-columns:repeat(3, 1fr); gap:1px;
+    background:rgba(0,0,0,0.08); padding-bottom:env(safe-area-inset-bottom, 0);
+  }
+  .kp-btn { padding:14px 0; background:#fff; border:none !important; color:var(--bright);
+    font-family:var(--font); font-size:22px; font-weight:500;
     user-select:none; -webkit-user-select:none; }
   .kp-btn:active { background:rgba(0,0,0,0.06); }
-  .kp-del { font-size:clamp(18px, 4.5vw, 24px); color:var(--mid); }
-  .kp-dot { font-size:clamp(22px, 5.5vw, 28px); }
-  .kp-neg { font-size:clamp(18px, 4.5vw, 22px); color:var(--mid); }
-  .kp-enter { grid-column: span 2; background:var(--gold) !important; color:#fff !important; font-weight:700;
-    letter-spacing:1px; font-size:clamp(16px, 4vw, 20px); }
+  .kp-del { font-size:20px; color:var(--mid); }
+  .kp-dot { font-size:24px; }
+  .kp-neg { font-size:18px; color:var(--mid); }
+  .kp-enter { grid-column:span 2; background:var(--gold) !important; color:#fff !important;
+    font-weight:700; letter-spacing:1px; font-size:18px; }
   .kp-enter:active { background:var(--gold-dim) !important; }
 
-  /* Desktop text input - hidden on mobile */
-  .desktop-input-wrap { margin-bottom:8px; }
+  /* Progress bar */
+  .progress-bar { flex-shrink:0; height:3px; background:rgba(0,0,0,0.06); }
+  .progress-fill { height:100%; transition:width 1s linear; }
+
+  /* Desktop input (hidden on mobile) */
+  .desktop-input-wrap { display:none; margin-bottom:8px; }
   .q-input-desktop { width:260px; padding:14px 20px; background:#fff;
     border:2px solid rgba(0,0,0,0.12); border-radius:8px; color:var(--bright);
     font-family:var(--mono); font-size:28px; font-weight:500;
-    text-align:center; outline:none; caret-color:var(--gold); transition: border-color 0.12s;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.06); }
+    text-align:center; outline:none; caret-color:var(--gold); transition:border-color 0.12s;
+    box-shadow:0 1px 3px rgba(0,0,0,0.06); }
   .q-input-desktop:focus { border-color:var(--gold); }
   .q-input-desktop.correct { border-color:var(--green); background:rgba(26,154,80,0.06); }
   .q-input-desktop.wrong { border-color:var(--red); background:rgba(216,48,48,0.06); }
+  .q-feedback-desktop { display:none; font-size:20px; color:var(--red); font-weight:500; font-family:var(--mono); min-height:26px; text-align:center; margin-top:6px; }
+  .q-tip-desktop { display:none; font-size:13px; color:rgba(0,0,0,0.35); font-style:italic; text-align:center; max-width:400px; min-height:18px; margin-top:8px; }
 
-  .progress-bar { position:fixed; bottom:0; left:0; right:0; height:3px; background:rgba(0,0,0,0.06); z-index:30; }
-  .progress-fill { height:100%; transition:width 1s linear; }
+  /* Ref panel (desktop only) */
+  .game-ref { display:none; position:fixed; top:70px; left:20px; font-size:12px; font-family:var(--mono);
+    color:rgba(0,0,0,0.22); line-height:2.0; }
+  .game-ref .ref-label { font-size:10px; letter-spacing:2px; color:rgba(0,0,0,0.3); margin-bottom:4px; font-family:var(--font); }
 
   /* ─── Results ─── */
+  #resultsScreen {
+    flex-direction:column; align-items:center; justify-content:center;
+    min-height:100vh; min-height:100dvh; padding:32px;
+    padding-top:env(safe-area-inset-top, 20px); padding-bottom:env(safe-area-inset-bottom, 20px);
+    overflow-y:auto;
+  }
   .results-label { font-size:12px; letter-spacing:6px; color:var(--gold); font-weight:600; text-transform:uppercase; margin-bottom:14px; }
   .results-score { font-size:clamp(60px, 18vw, 96px); font-weight:200; color:var(--bright); margin-bottom:4px; letter-spacing:-2px; }
   .results-stats { font-size:17px; color:var(--mid); margin-bottom:8px; }
   .results-streak { font-size:15px; color:var(--gold-dim); margin-bottom:36px; }
   .mode-breakdown { display:flex; gap:12px; flex-wrap:wrap; justify-content:center; margin-bottom:36px; }
   .mode-stat { padding:14px 22px; background:#fff; border:1px solid rgba(0,0,0,0.08); border-radius:8px; text-align:center; min-width:90px;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.04); }
+    box-shadow:0 1px 3px rgba(0,0,0,0.04); }
   .mode-stat .ms-label { font-size:10px; letter-spacing:2px; color:var(--dim); text-transform:uppercase; margin-bottom:6px; }
   .mode-stat .ms-val { font-size:24px; font-weight:300; color:var(--bright); }
   .mode-stat .ms-val .ms-total { font-size:14px; color:var(--dim); }
-
   .missed-section { width:100%; max-width:500px; margin-bottom:36px; }
   .missed-title { font-size:10px; letter-spacing:3px; color:var(--dim); text-transform:uppercase; text-align:center; margin-bottom:10px; }
   .missed-list { max-height:200px; overflow-y:auto; }
@@ -175,58 +193,44 @@
   .missed-row .mr-label { color:var(--dim); }
   .missed-row .mr-yours { color:var(--red); margin-right:18px; text-decoration:line-through; opacity:0.7; }
   .missed-row .mr-correct { color:var(--green); font-weight:500; }
-
   .again-btn { padding:16px 60px; background:var(--gold); border-radius:8px; color:#fff;
     font-size:17px; font-weight:700; letter-spacing:2px; text-transform:uppercase; }
 
-  /* Visibility helpers */
-  .mobile-only { display:none; }
-  .desktop-only { display:block; }
+  /* ═══ DESKTOP OVERRIDES ═══ */
+  @media (hover:hover) and (pointer:fine) and (min-width:769px) {
+    .keypad { display:none !important; }
+    .input-area { display:none; }
+    .q-tip { display:none; }
+    .desktop-input-wrap, .q-feedback-desktop, .q-tip-desktop { display:block; }
+    .game-ref { display:block; }
+    .q-solve { font-size:50px; margin-bottom:28px; }
+    .q-givens { margin-bottom:32px; }
+    .q-given-row { margin-bottom:10px; }
+    .q-given-key { font-size:24px; min-width:80px; }
+    .q-given-eq { font-size:24px; }
+    .q-given-val { font-size:26px; min-width:80px; }
+    .q-mode { font-size:12px; letter-spacing:5px; margin-bottom:20px; }
+    .game-timer { font-size:32px; }
+    .game-score-val { font-size:30px; }
+  }
 
-  /* Mobile: touch devices up to tablet width */
-  @media (max-width:768px), (hover:none) and (pointer:coarse) {
+  /* Small phones */
+  @media (max-height:700px) {
+    .kp-btn { padding:11px 0; font-size:20px; }
+    .kp-enter { font-size:16px; }
+    .q-solve { font-size:30px; margin-bottom:8px; }
+    .q-given-row { margin-bottom:3px; }
+    .q-given-key, .q-given-val { font-size:17px; }
+    .q-mode { margin-bottom:5px; font-size:10px; }
+    .q-tip { font-size:11px; margin-bottom:6px; }
+    .q-display { font-size:22px; min-height:42px; padding:8px 12px; width:180px; }
+    .q-overlay { font-size:22px; }
+  }
+
+  @media (max-width:480px) {
     .identity-card { padding:12px 14px; }
     .identity-row .formula { font-size:12px; }
     .mode-btn { padding:12px 14px; min-width:80px; font-size:14px; }
-    .game-ref { display:none; }
-    .q-given-key, .q-given-val { min-width:60px; }
-    .q-givens { margin-bottom:12px; }
-    .q-given-row { margin-bottom:6px; }
-    .q-solve { margin-bottom:14px; font-size:38px; }
-    .q-mode { margin-bottom:10px; }
-    .keypad { display:grid; }
-    .desktop-input-wrap { display:none; }
-    .desktop-only { display:none; }
-    .mobile-only { display:block; }
-    .q-display-row { display:flex; }
-
-    /* Fix the answer area right above the keypad */
-    .answer-area {
-      position:fixed; bottom:230px;
-      left:0; right:0; z-index:21;
-      background:var(--bg); padding:6px 16px 2px; display:flex; flex-direction:column; align-items:center;
-    }
-
-    /* Question area fills remaining space */
-    .game-body {
-      padding-top:70px;
-      padding-bottom:380px;
-      justify-content:flex-start;
-    }
-  }
-
-  /* Desktop: mouse/trackpad devices wider than tablet */
-  @media (min-width:769px) and (hover:hover) and (pointer:fine) {
-    .q-display-row { display:none; }
-    .answer-area { position:static; background:none; padding:0; }
-    .mobile-only { display:none !important; }
-  }
-
-  /* Fallback for wide screens that somehow match neither */
-  @media (min-width:769px) {
-    .q-display-row { display:none; }
-    .answer-area { position:static; background:none; padding:0; }
-    .mobile-only { display:none !important; }
   }
 </style>
 </head>
@@ -237,7 +241,6 @@
   <div class="menu-label">Put-Call Parity</div>
   <div class="menu-title">Parity Drill</div>
   <div class="menu-sub">Speed drill · solve for the missing variable</div>
-
   <div class="identity-card">
     <h3>Core Identities</h3>
     <div class="identity-row"><span class="name">Parity</span><span class="formula">C − P = S + r/c − K</span></div>
@@ -247,30 +250,21 @@
     <div class="identity-row"><span class="name indent">→ Solve P</span><span class="formula">P = (Str − Combo) / 2</span></div>
     <div class="identity-row"><span class="name">Buy/Write</span><span class="formula">B/W = C − intrinsic = P + r/c</span></div>
   </div>
-
   <div class="mode-grid" id="modeGrid"></div>
-
-  <div class="time-row" id="timeRow">
-    <span class="label">Time:</span>
-  </div>
-
+  <div class="time-row" id="timeRow"><span class="label">Time:</span></div>
   <label class="toggle-row">
     <input type="checkbox" id="showIdToggle" checked>
-    Show identities &amp; tips during game
+    Show identity tip during game
   </label>
-
   <button class="start-btn" onclick="startGame()">Start</button>
   <div class="credit">Inspired by the SIG parity game &amp; Kris Abdelmessih's Moontower</div>
 </div>
 
-<!-- ═══ GAME ═══ -->
+<!-- ═══ GAME — flex column: top bar → question → keypad → progress ═══ -->
 <div id="gameScreen" class="screen">
   <div class="game-top">
     <div class="game-score-area">
-      <div>
-        <span class="game-score-label">SCORE</span>
-        <span class="game-score-val" id="gScore">0</span>
-      </div>
+      <div><span class="game-score-label">SCORE</span><span class="game-score-val" id="gScore">0</span></div>
       <span class="game-streak" id="gStreak"></span>
     </div>
     <div class="game-timer-area">
@@ -281,34 +275,28 @@
 
   <div class="game-ref" id="gameRef">
     <div class="ref-label">REF</div>
-    C − P = S + r/c − K<br>
-    Combo = C − P<br>
-    Straddle = C + P<br>
-    B/W = C − intrinsic
+    C − P = S + r/c − K<br>Combo = C − P<br>Straddle = C + P<br>B/W = C − intrinsic
   </div>
 
-  <div class="game-body">
+  <div class="game-mid">
     <div class="q-mode" id="qMode"></div>
     <div class="q-solve" id="qSolve"></div>
     <div class="q-givens" id="qGivens"></div>
+    <div class="q-tip" id="qTip"></div>
+    <div class="input-area">
+      <div class="q-display" id="qDisplay">—</div>
+      <div class="q-overlay" id="qOverlay"></div>
+    </div>
     <div class="desktop-input-wrap">
       <form onsubmit="handleDesktopSubmit(event)">
         <input type="text" class="q-input-desktop" id="qInputDesktop" autocomplete="off" placeholder="—">
       </form>
     </div>
-    <div class="q-feedback desktop-only" id="qFeedbackDesktop"></div>
-    <div class="q-tip desktop-only" id="qTipDesktop"></div>
+    <div class="q-feedback-desktop" id="qFeedbackDesktop"></div>
+    <div class="q-tip-desktop" id="qTipDesktop"></div>
   </div>
 
-  <div class="answer-area" id="answerArea">
-    <div class="q-tip mobile-only" id="qTipMobile"></div>
-    <div class="q-display-row">
-      <div class="q-display" id="qDisplay">—</div>
-    </div>
-    <div class="q-feedback mobile-only" id="qFeedbackMobile"></div>
-  </div>
-
-  <div class="keypad" id="keypad">
+  <div class="keypad">
     <button class="kp-btn" onclick="kpPress('1')">1</button>
     <button class="kp-btn" onclick="kpPress('2')">2</button>
     <button class="kp-btn" onclick="kpPress('3')">3</button>
@@ -342,7 +330,6 @@
 </div>
 
 <script>
-// ─── State ───────────────────────────────────────────────────────
 const MODES = [
   { id:'putcall', label:'Put-Call', desc:'C, P, S, r/c' },
   { id:'combo', label:'Combo', desc:'Combo ↔ option' },
@@ -356,311 +343,169 @@ const TIMES = [
   { label:'∞', sec:null },
 ];
 
-let activeModes = new Set(['putcall']);
-let duration = 120;
-let showIdentities = true;
-let score = 0, streak = 0, bestStreak = 0, elapsed = 0, timeLeft = 120;
-let question = null, feedback = null, history = [];
-let timerInterval = null;
+let activeModes=new Set(['putcall']), duration=120, showIdentities=true;
+let score=0,streak=0,bestStreak=0,elapsed=0,timeLeft=120;
+let question=null,feedback=null,history=[],timerInterval=null,inputStr='';
 
-// ─── Helpers ─────────────────────────────────────────────────────
-const ri = (a,b) => Math.floor(Math.random()*(b-a+1))+a;
-const rp = (a,b) => parseFloat((Math.random()*(b-a)+a).toFixed(2));
-const r2 = v => parseFloat(v.toFixed(2));
+const ri=(a,b)=>Math.floor(Math.random()*(b-a+1))+a;
+const rp=(a,b)=>parseFloat((Math.random()*(b-a)+a).toFixed(2));
+const r2=v=>parseFloat(v.toFixed(2));
 
-// ─── Generators ──────────────────────────────────────────────────
 function genPutCall(){
-  const K=ri(2,20)*5, S=r2(K+rp(-8,8)), rc=r2(rp(0.05,0.40)), combo=r2(S+rc-K), p=Math.random();
-  if(p<0.25){ const P=r2(rp(0.20,5)),C=r2(P+combo); if(C<0.01)return genPutCall(); return{given:{P,"r/c":rc,S,K},solve:"C",answer:C}; }
-  if(p<0.5){ const C=r2(rp(0.20,6)),P=r2(C-combo); if(P<0.01)return genPutCall(); return{given:{C,"r/c":rc,S,K},solve:"P",answer:P}; }
-  if(p<0.75){ const P=r2(rp(0.20,5)),C=r2(P+combo); if(C<0.01)return genPutCall(); return{given:{C,P,"r/c":rc,K},solve:"S",answer:S}; }
-  const P=r2(rp(0.20,5)),C=r2(P+combo); if(C<0.01)return genPutCall(); return{given:{C,P,S,K},solve:"r/c",answer:rc};
+  const K=ri(2,20)*5,S=r2(K+rp(-8,8)),rc=r2(rp(0.05,0.40)),combo=r2(S+rc-K),p=Math.random();
+  if(p<.25){const P=r2(rp(.2,5)),C=r2(P+combo);if(C<.01)return genPutCall();return{given:{P,"r/c":rc,S,K},solve:"C",answer:C};}
+  if(p<.5){const C=r2(rp(.2,6)),P=r2(C-combo);if(P<.01)return genPutCall();return{given:{C,"r/c":rc,S,K},solve:"P",answer:P};}
+  if(p<.75){const P=r2(rp(.2,5)),C=r2(P+combo);if(C<.01)return genPutCall();return{given:{C,P,"r/c":rc,K},solve:"S",answer:S};}
+  const P=r2(rp(.2,5)),C=r2(P+combo);if(C<.01)return genPutCall();return{given:{C,P,S,K},solve:"r/c",answer:rc};
 }
 function genCombo(){
-  const K=ri(2,20)*5, S=r2(K+rp(-8,8)), rc=r2(rp(0.05,0.40)), combo=r2(S+rc-K);
-  const P=r2(rp(0.20,5)),C=r2(P+combo); if(C<0.01)return genCombo();
-  return Math.random()<0.5 ? {given:{P,Combo:combo},solve:"C",answer:C} : {given:{C,Combo:combo},solve:"P",answer:P};
+  const K=ri(2,20)*5,S=r2(K+rp(-8,8)),rc=r2(rp(0.05,0.40)),combo=r2(S+rc-K);
+  const P=r2(rp(.2,5)),C=r2(P+combo);if(C<.01)return genCombo();
+  return Math.random()<.5?{given:{P,Combo:combo},solve:"C",answer:C}:{given:{C,Combo:combo},solve:"P",answer:P};
 }
 function genStraddle(){
-  const K=ri(2,20)*5, S=r2(K+rp(-8,8)), rc=r2(rp(0.05,0.40)), combo=r2(S+rc-K);
-  const P=r2(rp(0.30,5)),C=r2(P+combo); if(C<0.01)return genStraddle();
-  const str=r2(C+P);
-  return Math.random()<0.5 ? {given:{Straddle:str,"r/c":rc,S,K},solve:"C",answer:C} : {given:{Straddle:str,"r/c":rc,S,K},solve:"P",answer:P};
+  const K=ri(2,20)*5,S=r2(K+rp(-8,8)),rc=r2(rp(0.05,0.40)),combo=r2(S+rc-K);
+  const P=r2(rp(.3,5)),C=r2(P+combo);if(C<.01)return genStraddle();const str=r2(C+P);
+  return Math.random()<.5?{given:{Straddle:str,"r/c":rc,S,K},solve:"C",answer:C}:{given:{Straddle:str,"r/c":rc,S,K},solve:"P",answer:P};
 }
 function genBuyWrite(){
-  const K=ri(2,20)*5, S=r2(K+rp(0.5,12)), rc=r2(rp(0.05,0.40)), combo=r2(S+rc-K);
-  const P=r2(rp(0.20,4)),C=r2(P+combo); if(C<0.1)return genBuyWrite();
-  const intr=Math.max(0,r2(S-K)), bw=r2(C-intr); if(bw<0.05)return genBuyWrite();
-  return Math.random()<0.5 ? {given:{"B/W":bw,"r/c":rc,S,K},solve:"C",answer:C} : {given:{"B/W":bw,"r/c":rc,S,K},solve:"P",answer:P};
+  const K=ri(2,20)*5,S=r2(K+rp(.5,12)),rc=r2(rp(0.05,0.40)),combo=r2(S+rc-K);
+  const P=r2(rp(.2,4)),C=r2(P+combo);if(C<.1)return genBuyWrite();
+  const intr=Math.max(0,r2(S-K)),bw=r2(C-intr);if(bw<.05)return genBuyWrite();
+  return Math.random()<.5?{given:{"B/W":bw,"r/c":rc,S,K},solve:"C",answer:C}:{given:{"B/W":bw,"r/c":rc,S,K},solve:"P",answer:P};
 }
-const gens = { putcall:genPutCall, combo:genCombo, straddle:genStraddle, buywrite:genBuyWrite };
+const gens={putcall:genPutCall,combo:genCombo,straddle:genStraddle,buywrite:genBuyWrite};
 
 function getTip(q){
-  const s=q.solve, g=q.given;
-  if(g.Combo!==undefined){ if(s==="C")return"C = P + Combo"; if(s==="P")return"P = C − Combo"; }
-  if(g.Straddle!==undefined){ if(s==="C")return"Combo = S+r/c−K → C = (Str+Combo)/2"; if(s==="P")return"Combo = S+r/c−K → P = (Str−Combo)/2"; }
-  if(g["B/W"]!==undefined){ if(s==="C")return"C = max(S−K, 0) + B/W"; if(s==="P")return"C = max(S−K,0)+B/W → P = C−(S+r/c−K)"; }
-  if(s==="C")return"C = P + (S + r/c − K)"; if(s==="P")return"P = C − (S + r/c − K)";
-  if(s==="S")return"S = C − P + K − r/c"; if(s==="r/c")return"r/c = C − P − S + K";
+  const s=q.solve,g=q.given;
+  if(g.Combo!==undefined){if(s==="C")return"C = P + Combo";if(s==="P")return"P = C − Combo";}
+  if(g.Straddle!==undefined){if(s==="C")return"Combo=S+r/c−K → C=(Str+Combo)/2";if(s==="P")return"Combo=S+r/c−K → P=(Str−Combo)/2";}
+  if(g["B/W"]!==undefined){if(s==="C")return"C = max(S−K,0) + B/W";if(s==="P")return"P = B/W − r/c";}
+  if(s==="C")return"C = P + S + r/c − K";if(s==="P")return"P = C − S − r/c + K";
+  if(s==="S")return"S = C − P + K − r/c";if(s==="r/c")return"r/c = C − P − S + K";
   return"";
 }
 
-// ─── Screen Management ──────────────────────────────────────────
-function showScreen(id){
-  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
-  document.getElementById(id).classList.add('active');
-}
+function showScreen(id){document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));document.getElementById(id).classList.add('active');}
 
-// ─── Build Menu ─────────────────────────────────────────────────
 function buildMenu(){
-  const mg = document.getElementById('modeGrid');
-  mg.innerHTML = '';
-  MODES.forEach(m=>{
-    const btn = document.createElement('button');
-    btn.className = 'mode-btn' + (activeModes.has(m.id)?' on':'');
-    btn.innerHTML = m.label + '<div class="desc">'+m.desc+'</div>';
-    btn.onclick = ()=>{ if(activeModes.has(m.id)&&activeModes.size>1)activeModes.delete(m.id); else activeModes.add(m.id); buildMenu(); };
-    mg.appendChild(btn);
-  });
-
-  const tr = document.getElementById('timeRow');
-  tr.innerHTML = '<span class="label">Time:</span>';
-  TIMES.forEach(t=>{
-    const btn = document.createElement('button');
-    btn.className = 'time-btn' + (duration===t.sec?' on':'');
-    btn.textContent = t.label;
-    btn.onclick = ()=>{ duration=t.sec; buildMenu(); };
-    tr.appendChild(btn);
-  });
+  const mg=document.getElementById('modeGrid');mg.innerHTML='';
+  MODES.forEach(m=>{const b=document.createElement('button');b.className='mode-btn'+(activeModes.has(m.id)?' on':'');
+    b.innerHTML=m.label+'<div class="desc">'+m.desc+'</div>';
+    b.onclick=()=>{if(activeModes.has(m.id)&&activeModes.size>1)activeModes.delete(m.id);else activeModes.add(m.id);buildMenu();};mg.appendChild(b);});
+  const tr=document.getElementById('timeRow');tr.innerHTML='<span class="label">Time:</span>';
+  TIMES.forEach(t=>{const b=document.createElement('button');b.className='time-btn'+(duration===t.sec?' on':'');
+    b.textContent=t.label;b.onclick=()=>{duration=t.sec;buildMenu();};tr.appendChild(b);});
 }
 
-// ─── Game Logic ─────────────────────────────────────────────────
 function newQuestion(){
-  const pool = [...activeModes];
-  const modeId = pool[Math.floor(Math.random()*pool.length)];
-  const mode = MODES.find(m=>m.id===modeId);
-  question = gens[modeId]();
-  question.mode = mode.label;
-  feedback = null;
-  renderQuestion();
-}
-
-let inputStr = '';
-const isMobile = () => window.innerWidth <= 480;
-
-function renderDisplay(){
-  const d = document.getElementById('qDisplay');
-  if(inputStr === ''){
-    d.textContent = '—';
-    d.className = 'q-display empty';
-  } else {
-    d.textContent = inputStr;
-    d.className = 'q-display';
-  }
+  const pool=[...activeModes],mid=pool[Math.floor(Math.random()*pool.length)];
+  question=gens[mid]();question.mode=MODES.find(m=>m.id===mid).label;feedback=null;renderQuestion();
 }
 
 function renderQuestion(){
-  document.getElementById('qMode').textContent = question.mode;
-  document.getElementById('qSolve').innerHTML = question.solve + ' = <span class="q-mark">?</span>';
-
-  const gDiv = document.getElementById('qGivens');
-  gDiv.innerHTML = '';
+  document.getElementById('qMode').textContent=question.mode;
+  document.getElementById('qSolve').innerHTML=question.solve+' = <span class="q-mark">?</span>';
+  const gDiv=document.getElementById('qGivens');gDiv.innerHTML='';
   Object.entries(question.given).forEach(([k,v])=>{
-    gDiv.innerHTML += `<div class="q-given-row"><span class="q-given-key">${k}</span><span class="q-given-eq">=</span><span class="q-given-val">${v}</span></div>`;
+    gDiv.innerHTML+='<div class="q-given-row"><span class="q-given-key">'+k+'</span><span class="q-given-eq">=</span><span class="q-given-val">'+v+'</span></div>';
   });
+  const tip=showIdentities?getTip(question):'';
+  // Mobile
+  inputStr='';renderDisplay();
+  document.getElementById('qTip').textContent=tip;
+  const ov=document.getElementById('qOverlay');ov.textContent='';ov.classList.remove('show');
+  // Desktop
+  const d=document.getElementById('qInputDesktop');if(d){d.value='';d.className='q-input-desktop';d.disabled=false;d.focus();}
+  document.getElementById('qFeedbackDesktop').textContent='';
+  document.getElementById('qTipDesktop').textContent=tip;
+}
 
-  // Reset mobile display
-  inputStr = '';
-  renderDisplay();
-
-  // Reset desktop input
-  const dInp = document.getElementById('qInputDesktop');
-  if(dInp){ dInp.value=''; dInp.className='q-input-desktop'; dInp.disabled=false; dInp.focus(); }
-
-  // Clear feedback on both
-  document.getElementById('qFeedbackDesktop').textContent = '';
-  document.getElementById('qFeedbackMobile').textContent = '';
-
-  // Set tip on both
-  const tip = showIdentities ? getTip(question) : '';
-  document.getElementById('qTipDesktop').textContent = tip;
-  document.getElementById('qTipMobile').textContent = tip;
+function renderDisplay(){
+  const d=document.getElementById('qDisplay');
+  if(!inputStr){d.textContent='—';d.className='q-display empty';}
+  else{d.textContent=inputStr;d.className='q-display';}
 }
 
 function submitAnswer(val){
-  if(isNaN(val)||feedback!==null) return;
-
-  const correct = Math.abs(val - question.answer) < 0.015;
-  history.push({ ...question, userAnswer:val, correct });
-
-  const d = document.getElementById('qDisplay');
-  const dInp = document.getElementById('qInputDesktop');
-
+  if(isNaN(val)||feedback!==null)return;
+  const correct=Math.abs(val-question.answer)<0.015;
+  history.push({...question,userAnswer:val,correct});
+  const d=document.getElementById('qDisplay'),dI=document.getElementById('qInputDesktop'),ov=document.getElementById('qOverlay');
   if(correct){
-    score++;
-    streak++;
-    if(streak>bestStreak) bestStreak=streak;
-    d.className = 'q-display correct';
-    if(dInp) dInp.className = 'q-input-desktop correct';
-    document.getElementById('gScore').textContent = score;
-    document.getElementById('gStreak').textContent = streak>=3 ? '🔥 '+streak+'×' : '';
-    feedback = 'correct';
-    setTimeout(newQuestion, 180);
-  } else {
-    streak = 0;
-    d.className = 'q-display wrong';
-    if(dInp){ dInp.className = 'q-input-desktop wrong'; dInp.disabled = true; }
-    document.getElementById('qFeedbackDesktop').textContent = question.answer;
-    document.getElementById('qFeedbackMobile').textContent = question.answer;
-    document.getElementById('gStreak').textContent = '';
-    feedback = question.answer;
-    setTimeout(newQuestion, 1400);
+    score++;streak++;if(streak>bestStreak)bestStreak=streak;
+    d.className='q-display correct';if(dI)dI.className='q-input-desktop correct';
+    document.getElementById('gScore').textContent=score;
+    document.getElementById('gStreak').textContent=streak>=3?'🔥 '+streak+'×':'';
+    feedback='correct';setTimeout(newQuestion,180);
+  }else{
+    streak=0;d.className='q-display wrong';
+    ov.textContent=question.answer;ov.classList.add('show');
+    if(dI){dI.className='q-input-desktop wrong';dI.disabled=true;}
+    document.getElementById('qFeedbackDesktop').textContent=question.answer;
+    document.getElementById('gStreak').textContent='';
+    feedback=question.answer;setTimeout(newQuestion,1400);
   }
 }
 
-// Desktop form submit
-function handleDesktopSubmit(e){
-  e.preventDefault();
-  const dInp = document.getElementById('qInputDesktop');
-  const val = parseFloat(dInp.value);
-  submitAnswer(val);
-}
-
-// Mobile keypad
-function kpPress(ch){
-  if(feedback!==null) return;
-  if(ch==='.' && inputStr.includes('.')) return;
-  if(ch==='.' && inputStr==='') { inputStr='0.'; renderDisplay(); return; }
-  inputStr += ch;
-  renderDisplay();
-}
-
-function kpDelete(){
-  if(feedback!==null) return;
-  inputStr = inputStr.slice(0,-1);
-  renderDisplay();
-}
-
-function kpNeg(){
-  if(feedback!==null) return;
-  if(inputStr.startsWith('-')) inputStr = inputStr.slice(1);
-  else if(inputStr!=='') inputStr = '-'+inputStr;
-  renderDisplay();
-}
-
-function kpSubmit(){
-  if(feedback!==null || inputStr==='') return;
-  const val = parseFloat(inputStr);
-  submitAnswer(val);
-}
-
-function handleSubmit(e){
-  if(e) e.preventDefault();
-  kpSubmit();
-}
+function handleDesktopSubmit(e){e.preventDefault();submitAnswer(parseFloat(document.getElementById('qInputDesktop').value));}
+function kpPress(ch){if(feedback!==null)return;if(ch==='.'&&inputStr.includes('.'))return;if(ch==='.'&&!inputStr){inputStr='0.';renderDisplay();return;}inputStr+=ch;renderDisplay();}
+function kpDelete(){if(feedback!==null)return;inputStr=inputStr.slice(0,-1);renderDisplay();}
+function kpNeg(){if(feedback!==null)return;if(inputStr.startsWith('-'))inputStr=inputStr.slice(1);else if(inputStr)inputStr='-'+inputStr;renderDisplay();}
+function kpSubmit(){if(feedback!==null||!inputStr)return;submitAnswer(parseFloat(inputStr));}
 
 function updateTimer(){
   elapsed++;
-  const isUnlimited = duration===null;
-
-  if(!isUnlimited){
-    timeLeft--;
-    const pct = (timeLeft / duration) * 100;
-    const fill = document.getElementById('progressFill');
-    fill.style.width = pct+'%';
-    fill.style.background = timeLeft<=15 ? 'var(--red)' : 'linear-gradient(90deg, var(--gold-dim), var(--gold))';
-
-    const timer = document.getElementById('gTimer');
-    timer.className = 'game-timer' + (timeLeft<=15?' urgent':'');
-    const m=Math.floor(timeLeft/60), s=timeLeft%60;
-    timer.textContent = m+':'+String(s).padStart(2,'0');
-
-    if(timeLeft<=0) endGame();
-  } else {
-    const m=Math.floor(elapsed/60), s=elapsed%60;
-    document.getElementById('gTimer').textContent = '▲ '+m+':'+String(s).padStart(2,'0');
-  }
+  if(duration!==null){
+    timeLeft--;const pct=(timeLeft/duration)*100,f=document.getElementById('progressFill');
+    f.style.width=pct+'%';f.style.background=timeLeft<=15?'var(--red)':'linear-gradient(90deg,var(--gold-dim),var(--gold))';
+    const t=document.getElementById('gTimer');t.className='game-timer'+(timeLeft<=15?' urgent':'');
+    t.textContent=Math.floor(timeLeft/60)+':'+String(timeLeft%60).padStart(2,'0');
+    if(timeLeft<=0)endGame();
+  }else{document.getElementById('gTimer').textContent='▲ '+Math.floor(elapsed/60)+':'+String(elapsed%60).padStart(2,'0');}
 }
 
 function startGame(){
-  showIdentities = document.getElementById('showIdToggle').checked;
-  score=0; streak=0; bestStreak=0; elapsed=0; history=[]; feedback=null;
-  timeLeft = duration||0;
-
-  const isUnlimited = duration===null;
-  document.getElementById('gScore').textContent = '0';
-  document.getElementById('gStreak').textContent = '';
-  document.getElementById('finishBtn').style.display = 'block';
-  document.getElementById('progressBar').style.display = isUnlimited?'none':'block';
-  document.getElementById('progressFill').style.width = '100%';
-  document.getElementById('progressFill').style.background = 'linear-gradient(90deg, var(--gold-dim), var(--gold))';
-
-  const ref = document.getElementById('gameRef');
-  ref.style.display = showIdentities?'block':'none';
-
-  if(!isUnlimited){
-    const m=Math.floor(timeLeft/60), s=timeLeft%60;
-    document.getElementById('gTimer').textContent = m+':'+String(s).padStart(2,'0');
-    document.getElementById('gTimer').className = 'game-timer';
-  } else {
-    document.getElementById('gTimer').textContent = '▲ 0:00';
-    document.getElementById('gTimer').className = 'game-timer';
-  }
-
-  showScreen('gameScreen');
-  newQuestion();
-  if(timerInterval) clearInterval(timerInterval);
-  timerInterval = setInterval(updateTimer, 1000);
+  showIdentities=document.getElementById('showIdToggle').checked;
+  score=0;streak=0;bestStreak=0;elapsed=0;history=[];feedback=null;timeLeft=duration||0;
+  document.getElementById('gScore').textContent='0';document.getElementById('gStreak').textContent='';
+  document.getElementById('finishBtn').style.display='block';
+  document.getElementById('progressBar').style.display=duration===null?'none':'block';
+  document.getElementById('progressFill').style.width='100%';
+  document.getElementById('progressFill').style.background='linear-gradient(90deg,var(--gold-dim),var(--gold))';
+  document.getElementById('gameRef').style.display=showIdentities?'':'none';
+  if(duration!==null){document.getElementById('gTimer').textContent=Math.floor(timeLeft/60)+':'+String(timeLeft%60).padStart(2,'0');}
+  else{document.getElementById('gTimer').textContent='▲ 0:00';}
+  document.getElementById('gTimer').className='game-timer';
+  showScreen('gameScreen');newQuestion();
+  if(timerInterval)clearInterval(timerInterval);timerInterval=setInterval(updateTimer,1000);
 }
 
-function endGame(){
-  if(timerInterval){ clearInterval(timerInterval); timerInterval=null; }
-  renderResults();
-  showScreen('resultsScreen');
-}
+function endGame(){if(timerInterval){clearInterval(timerInterval);timerInterval=null;}renderResults();showScreen('resultsScreen');}
 
 function renderResults(){
-  const correct = history.filter(h=>h.correct).length;
-  const total = history.length;
-  const acc = total>0 ? Math.round((correct/total)*100) : 0;
-  const em=Math.floor(elapsed/60), es=elapsed%60;
-
-  document.getElementById('rLabel').textContent = duration===null ? 'Session Complete' : "Time's Up";
-  document.getElementById('rScore').textContent = score;
-  document.getElementById('rStats').textContent = correct+' / '+total+' correct · '+acc+'%' + (duration===null ? ' · '+em+':'+String(es).padStart(2,'0') : '');
-  document.getElementById('rStreak').textContent = 'Best streak: '+bestStreak;
-
-  const byMode = {};
-  history.forEach(h=>{ if(!byMode[h.mode])byMode[h.mode]={c:0,t:0}; byMode[h.mode].t++; if(h.correct)byMode[h.mode].c++; });
-  const bd = document.getElementById('rBreakdown');
-  bd.innerHTML = '';
-  Object.entries(byMode).forEach(([mode,s])=>{
-    bd.innerHTML += `<div class="mode-stat"><div class="ms-label">${mode}</div><div class="ms-val">${s.c}<span class="ms-total"> / ${s.t}</span></div></div>`;
-  });
-
-  const missed = history.filter(h=>!h.correct);
-  const ms = document.getElementById('rMissed');
-  if(missed.length===0){ ms.innerHTML=''; return; }
-  let html = '<div class="missed-title">Review — Missed</div><div class="missed-list">';
-  missed.forEach((h,i)=>{
-    html += `<div class="missed-row"><span class="mr-label">${h.mode} → ${h.solve}</span><span><span class="mr-yours">${h.userAnswer}</span><span class="mr-correct">${h.answer}</span></span></div>`;
-  });
-  html += '</div>';
-  ms.innerHTML = html;
+  const c=history.filter(h=>h.correct).length,t=history.length,a=t>0?Math.round(c/t*100):0;
+  const em=Math.floor(elapsed/60),es=elapsed%60;
+  document.getElementById('rLabel').textContent=duration===null?'Session Complete':"Time's Up";
+  document.getElementById('rScore').textContent=score;
+  document.getElementById('rStats').textContent=c+' / '+t+' correct · '+a+'%'+(duration===null?' · '+em+':'+String(es).padStart(2,'0'):'');
+  document.getElementById('rStreak').textContent='Best streak: '+bestStreak;
+  const byMode={};history.forEach(h=>{if(!byMode[h.mode])byMode[h.mode]={c:0,t:0};byMode[h.mode].t++;if(h.correct)byMode[h.mode].c++;});
+  const bd=document.getElementById('rBreakdown');bd.innerHTML='';
+  Object.entries(byMode).forEach(([m,s])=>{bd.innerHTML+='<div class="mode-stat"><div class="ms-label">'+m+'</div><div class="ms-val">'+s.c+'<span class="ms-total"> / '+s.t+'</span></div></div>';});
+  const missed=history.filter(h=>!h.correct),ms=document.getElementById('rMissed');
+  if(!missed.length){ms.innerHTML='';return;}
+  let h='<div class="missed-title">Review — Missed</div><div class="missed-list">';
+  missed.forEach(x=>{h+='<div class="missed-row"><span class="mr-label">'+x.mode+' → '+x.solve+'</span><span><span class="mr-yours">'+x.userAnswer+'</span><span class="mr-correct">'+x.answer+'</span></span></div>';});
+  ms.innerHTML=h+'</div>';
 }
 
-function goMenu(){
-  showScreen('menuScreen');
-  buildMenu();
-}
+function goMenu(){showScreen('menuScreen');buildMenu();}
 
-// ─── Init ────────────────────────────────────────────────────────
 buildMenu();
-document.addEventListener('keydown', function(e){
-  const gameActive = document.getElementById('gameScreen').classList.contains('active');
-  if(!gameActive) return;
-
-  if(e.key === 'Escape'){ endGame(); return; }
+document.addEventListener('keydown',function(e){
+  if(!document.getElementById('gameScreen').classList.contains('active'))return;
+  if(e.key==='Escape')endGame();
 });
 </script>
 </body>
