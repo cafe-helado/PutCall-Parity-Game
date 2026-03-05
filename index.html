@@ -378,12 +378,14 @@ const gens={putcall:genPutCall,combo:genCombo,straddle:genStraddle,buywrite:genB
 
 function getTip(q){
   const s=q.solve,g=q.given;
-  if(g.Combo!==undefined){if(s==="C")return"C = P + Combo";if(s==="P")return"P = C − Combo";}
-  if(g.Straddle!==undefined){if(s==="C")return"Combo=S+r/c−K → C=(Str+Combo)/2";if(s==="P")return"Combo=S+r/c−K → P=(Str−Combo)/2";}
-  if(g["B/W"]!==undefined){if(s==="C")return"C = max(S−K,0) + B/W";if(s==="P")return"P = B/W − r/c";}
-  if(s==="C")return"C = P + S + r/c − K";if(s==="P")return"P = C − S − r/c + K";
-  if(s==="S")return"S = C − P + K − r/c";if(s==="r/c")return"r/c = C − P − S + K";
-  return"";
+  if(g.Combo!==undefined){if(s==="C")return{name:"Combo",f:"C = P + Combo"};if(s==="P")return{name:"Combo",f:"P = C − Combo"};}
+  if(g.Straddle!==undefined){if(s==="C")return{name:"Straddle",f:"C = (Straddle + Combo) / 2"};if(s==="P")return{name:"Straddle",f:"P = (Straddle − Combo) / 2"};}
+  if(g["B/W"]!==undefined){if(s==="C")return{name:"Buy/Write",f:"B/W = C − intrinsic"};if(s==="P")return{name:"Buy/Write",f:"B/W = P + r/c"};}
+  if(s==="C")return{name:"Parity",f:"C − P = S + r/c − K"};
+  if(s==="P")return{name:"Parity",f:"C − P = S + r/c − K"};
+  if(s==="S")return{name:"Parity",f:"C − P = S + r/c − K"};
+  if(s==="r/c")return{name:"Parity",f:"C − P = S + r/c − K"};
+  return null;
 }
 
 function showScreen(id){document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));document.getElementById(id).classList.add('active');}
@@ -410,10 +412,12 @@ function renderQuestion(){
   Object.entries(question.given).forEach(([k,v])=>{
     gDiv.innerHTML+='<div class="q-given-row"><span class="q-given-key">'+k+'</span><span class="q-given-eq">=</span><span class="q-given-val">'+v+'</span></div>';
   });
-  const tip=showIdentities?getTip(question):'';
+  const tip=showIdentities?getTip(question):null;
   // Mobile
   inputStr='';renderDisplay();
-  document.getElementById('qTip').textContent=tip;
+  document.getElementById('qTip').textContent=tip?tip.f:'';
+  // Desktop tip
+  document.getElementById('qTipDesktop').textContent=tip?tip.f:'';
   const ov=document.getElementById('qOverlay');ov.textContent='';ov.classList.remove('show');
   // Desktop
   const d=document.getElementById('qInputDesktop');if(d){d.value='';d.className='q-input-desktop';d.disabled=false;d.focus();}
