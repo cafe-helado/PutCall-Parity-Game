@@ -197,7 +197,7 @@
     font-size:17px; font-weight:700; letter-spacing:2px; text-transform:uppercase; }
 
   /* ═══ DESKTOP OVERRIDES ═══ */
-  @media (hover:hover) and (pointer:fine) and (min-width:769px) {
+  @media (min-width:769px) {
     .keypad { display:none !important; }
     .input-area { display:none; }
     .q-tip { display:none; }
@@ -413,11 +413,12 @@ function renderQuestion(){
     gDiv.innerHTML+='<div class="q-given-row"><span class="q-given-key">'+k+'</span><span class="q-given-eq">=</span><span class="q-given-val">'+v+'</span></div>';
   });
   const tip=showIdentities?getTip(question):null;
+  const tipStr=tip?tip.f:'';
   // Mobile
   inputStr='';renderDisplay();
-  document.getElementById('qTip').textContent=tip?tip.f:'';
+  document.getElementById('qTip').textContent=tipStr;
   // Desktop tip
-  document.getElementById('qTipDesktop').textContent=tip?tip.f:'';
+  document.getElementById('qTipDesktop').textContent=tipStr;
   const ov=document.getElementById('qOverlay');ov.textContent='';ov.classList.remove('show');
   // Desktop
   const d=document.getElementById('qInputDesktop');if(d){d.value='';d.className='q-input-desktop';d.disabled=false;d.focus();}
