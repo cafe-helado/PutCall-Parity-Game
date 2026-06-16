@@ -1,894 +1,516 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8"/>
-<meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no"/>
-<meta name="apple-mobile-web-app-capable" content="yes"/>
-<meta name="apple-mobile-web-app-status-bar-style" content="default"/>
-<title>Breakeven Drill</title>
-<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📊</text></svg>"/>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#f5f5f8">
+<title>Parity Drill</title>
 <style>
-@import url('https://fonts.googleapis.com/css2?family=DM+Mono:wght@300;400;500&family=Instrument+Serif&display=swap');
-*{box-sizing:border-box;margin:0;padding:0}
-body{background:#f8f9fc;-webkit-font-smoothing:antialiased;-webkit-tap-highlight-color:transparent;font-size:16px}
-input::-webkit-outer-spin-button,input::-webkit-inner-spin-button{-webkit-appearance:none}
-input[type=number]{-moz-appearance:textfield}
-@keyframes fadeUp{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
-@keyframes fadeIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
-@keyframes blink{0%,100%{opacity:1}50%{opacity:0}}
-.gcard{animation:fadeIn .25s ease-out}
-@media(max-width:480px){
-  .gcard table{font-size:15px !important}
-  .gcard table th{font-size:12px !important}
-}
+  * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+  :root {
+    --bg: #f5f5f8;
+    --surface: rgba(0,0,0,0.04);
+    --border: rgba(0,0,0,0.1);
+    --gold: #c48820;
+    --gold-dim: #a07020;
+    --gold-bg: rgba(196,136,32,0.08);
+    --green: #1a9a50;
+    --red: #d83030;
+    --white: #1a1a2e;
+    --bright: #1a1a2e;
+    --mid: #555568;
+    --dim: #888898;
+    --font: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI', Helvetica, Arial, sans-serif;
+    --mono: 'SF Mono', 'Menlo', 'Consolas', 'Monaco', monospace;
+  }
+  html, body { height:100%; background:var(--bg); color:var(--bright); font-family:var(--font); margin:0; }
+  button { cursor:pointer; border:none; font-family:var(--font); transition:all 0.12s ease; }
+  button:active { transform:scale(0.97); }
+  input[type="text"] { -webkit-appearance:none; appearance:none; border-radius:8px; }
+
+  /* ─── Screens ─── */
+  .screen { display:none; }
+  .screen.active { display:flex; }
+
+  /* ─── Menu ─── */
+  #menuScreen {
+    flex-direction:column; align-items:center; justify-content:center;
+    min-height:100vh; min-height:100dvh; padding:24px;
+    padding-top:env(safe-area-inset-top, 20px); padding-bottom:env(safe-area-inset-bottom, 20px);
+  }
+  .menu-label { font-size:12px; letter-spacing:5px; color:var(--gold); font-weight:600; text-transform:uppercase; margin-bottom:10px; }
+  .menu-title { font-size:clamp(36px, 8vw, 52px); font-weight:300; color:var(--white); margin-bottom:4px; }
+  .menu-sub { font-size:15px; color:var(--mid); margin-bottom:28px; }
+  .identity-card {
+    background:#fff; border:1px solid rgba(0,0,0,0.08); border-radius:10px;
+    padding:16px 20px; margin-bottom:24px; width:100%; max-width:520px;
+    box-shadow:0 1px 4px rgba(0,0,0,0.05);
+  }
+  .identity-card h3 { font-size:10px; letter-spacing:3px; text-transform:uppercase; color:var(--dim); margin-bottom:10px; font-weight:600; }
+  .identity-row { display:flex; justify-content:space-between; align-items:center; padding:6px 0; border-bottom:1px solid rgba(0,0,0,0.05); }
+  .identity-row:last-child { border-bottom:none; }
+  .identity-row .name { font-size:13px; color:var(--mid); min-width:80px; }
+  .identity-row .name.indent { padding-left:12px; color:var(--dim); }
+  .identity-row .formula { font-size:14px; font-family:var(--mono); color:var(--bright); letter-spacing:0.3px; }
+  .mode-grid { display:flex; flex-wrap:wrap; gap:8px; justify-content:center; margin-bottom:16px; }
+  .mode-btn { padding:14px 18px; background:var(--surface); border:1.5px solid var(--border) !important;
+    border-radius:8px; color:var(--mid); font-size:16px; font-weight:400; min-width:105px; }
+  .mode-btn.on { background:var(--gold-bg); border-color:var(--gold) !important; color:var(--gold); font-weight:600; }
+  .mode-btn .desc { font-size:10px; margin-top:4px; color:rgba(0,0,0,0.25); }
+  .mode-btn.on .desc { color:var(--gold-dim); }
+  .time-row { display:flex; gap:8px; align-items:center; margin-bottom:16px; }
+  .time-row .label { font-size:14px; color:var(--mid); margin-right:4px; }
+  .time-btn { padding:10px 18px; background:var(--surface); border:1.5px solid var(--border) !important;
+    border-radius:8px; color:var(--dim); font-size:15px; font-weight:400; }
+  .time-btn.on { background:var(--gold-bg); border-color:var(--gold) !important; color:var(--gold); font-weight:600; }
+  .toggle-row { font-size:13px; color:var(--mid); margin-bottom:28px; display:flex; align-items:center; gap:8px; }
+  .toggle-row input { accent-color:var(--gold); }
+  .start-btn { padding:16px 60px; background:var(--gold); border-radius:8px; color:#fff;
+    font-size:17px; font-weight:700; letter-spacing:2px; text-transform:uppercase; }
+  .credit { font-size:11px; color:rgba(0,0,0,0.2); margin-top:32px; text-align:center; line-height:1.8; }
+
+  /* ═══ GAME — uses natural flex column, NO fixed positioning ═══ */
+  #gameScreen {
+    flex-direction:column; height:100vh; height:100dvh; overflow:hidden;
+  }
+
+  .game-top {
+    flex-shrink:0; display:flex; justify-content:space-between; align-items:center;
+    padding:10px 16px; padding-top:calc(env(safe-area-inset-top, 10px) + 4px);
+  }
+  .game-score-area { display:flex; align-items:baseline; gap:12px; }
+  .game-score-label { font-size:11px; color:var(--dim); letter-spacing:2px; }
+  .game-score-val { font-size:26px; font-weight:300; color:var(--bright); margin-left:4px; }
+  .game-streak { font-size:14px; color:var(--gold); font-weight:600; }
+  .game-timer-area { display:flex; align-items:center; gap:10px; }
+  .game-timer { font-size:24px; font-weight:300; letter-spacing:2px; color:var(--dim);
+    font-variant-numeric:tabular-nums; font-family:var(--mono); }
+  .game-timer.urgent { color:var(--red); }
+  .finish-btn { padding:6px 14px; background:rgba(0,0,0,0.05); border:1px solid rgba(0,0,0,0.12) !important;
+    border-radius:6px; color:var(--mid); font-size:12px; }
+
+  /* Middle area: fills space between top bar and keypad */
+  .game-mid {
+    flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center;
+    padding:0 20px; min-height:0;
+  }
+
+  .q-mode { font-size:11px; letter-spacing:4px; text-transform:uppercase; color:var(--gold-dim); margin-bottom:8px; font-weight:600; }
+  .q-solve { font-size:36px; font-weight:300; color:var(--white); margin-bottom:12px; }
+  .q-solve .q-mark { color:var(--gold); }
+  .q-givens { margin-bottom:10px; }
+  .q-given-row { display:flex; justify-content:center; align-items:baseline; gap:8px; margin-bottom:5px; }
+  .q-given-key { font-size:19px; color:var(--mid); min-width:60px; text-align:right; }
+  .q-given-eq { font-size:19px; color:rgba(0,0,0,0.2); }
+  .q-given-val { font-size:21px; font-family:var(--mono); color:var(--bright); font-weight:600; min-width:60px; text-align:left; }
+
+  /* Tip line — shows the relevant identity */
+  .q-tip { font-size:12px; color:var(--gold-dim); font-style:italic; text-align:center; margin-top:10px; min-height:16px; font-family:var(--mono); }
+
+  /* Answer display with overlay for correct answer */
+  .input-area { position:relative; margin-bottom:4px; }
+  .q-display { width:200px; padding:10px 16px; background:#fff;
+    border:2px solid rgba(0,0,0,0.12); border-radius:8px; color:var(--bright);
+    font-family:var(--mono); font-size:26px; font-weight:500;
+    text-align:center; min-height:48px; display:flex; align-items:center; justify-content:center;
+    box-shadow:0 1px 3px rgba(0,0,0,0.06); transition:border-color 0.12s; }
+  .q-display.correct { border-color:var(--green); background:rgba(26,154,80,0.06); }
+  .q-display.wrong { border-color:var(--red); background:rgba(216,48,48,0.06); }
+  .q-display.empty { color:var(--dim); }
+
+  /* Correct answer flashes ON TOP of display — no extra vertical space */
+  .q-overlay {
+    position:absolute; top:0; left:0; right:0; bottom:0;
+    display:none; align-items:center; justify-content:center;
+    background:rgba(255,240,240,0.95); border:2px solid var(--red); border-radius:8px;
+    font-family:var(--mono); font-size:26px; font-weight:700; color:var(--red);
+  }
+  .q-overlay.show { display:flex; }
+
+  /* Keypad — natural flex child, sits at bottom */
+  .keypad {
+    flex-shrink:0; display:grid; grid-template-columns:repeat(3, 1fr); gap:1px;
+    background:rgba(0,0,0,0.08); padding-bottom:env(safe-area-inset-bottom, 0);
+  }
+  .kp-btn { padding:14px 0; background:#fff; border:none !important; color:var(--bright);
+    font-family:var(--font); font-size:22px; font-weight:500;
+    user-select:none; -webkit-user-select:none; }
+  .kp-btn:active { background:rgba(0,0,0,0.06); }
+  .kp-del { font-size:20px; color:var(--mid); }
+  .kp-dot { font-size:24px; }
+  .kp-neg { font-size:18px; color:var(--mid); }
+  .kp-enter { grid-column:span 2; background:var(--gold) !important; color:#fff !important;
+    font-weight:700; letter-spacing:1px; font-size:18px; }
+  .kp-enter:active { background:var(--gold-dim) !important; }
+
+  /* Progress bar */
+  .progress-bar { flex-shrink:0; height:3px; background:rgba(0,0,0,0.06); }
+  .progress-fill { height:100%; transition:width 1s linear; }
+
+  /* Desktop input (hidden on mobile) */
+  .desktop-input-wrap { display:none; margin-bottom:8px; }
+  .q-input-desktop { width:260px; padding:14px 20px; background:#fff;
+    border:2px solid rgba(0,0,0,0.12); border-radius:8px; color:var(--bright);
+    font-family:var(--mono); font-size:28px; font-weight:500;
+    text-align:center; outline:none; caret-color:var(--gold); transition:border-color 0.12s;
+    box-shadow:0 1px 3px rgba(0,0,0,0.06); }
+  .q-input-desktop:focus { border-color:var(--gold); }
+  .q-input-desktop.correct { border-color:var(--green); background:rgba(26,154,80,0.06); }
+  .q-input-desktop.wrong { border-color:var(--red); background:rgba(216,48,48,0.06); }
+  .q-feedback-desktop { display:none; font-size:20px; color:var(--red); font-weight:500; font-family:var(--mono); min-height:26px; text-align:center; margin-top:6px; }
+  .q-tip-desktop { display:none; font-size:13px; color:rgba(0,0,0,0.35); font-style:italic; text-align:center; max-width:400px; min-height:18px; margin-top:8px; }
+
+  /* Ref panel (desktop only) */
+  .game-ref { display:none; position:fixed; top:70px; left:20px; font-size:12px; font-family:var(--mono);
+    color:rgba(0,0,0,0.22); line-height:2.0; }
+  .game-ref .ref-label { font-size:10px; letter-spacing:2px; color:rgba(0,0,0,0.3); margin-bottom:4px; font-family:var(--font); }
+
+  /* ─── Results ─── */
+  #resultsScreen {
+    flex-direction:column; align-items:center; justify-content:center;
+    min-height:100vh; min-height:100dvh; padding:32px;
+    padding-top:env(safe-area-inset-top, 20px); padding-bottom:env(safe-area-inset-bottom, 20px);
+    overflow-y:auto;
+  }
+  .results-label { font-size:12px; letter-spacing:6px; color:var(--gold); font-weight:600; text-transform:uppercase; margin-bottom:14px; }
+  .results-score { font-size:clamp(60px, 18vw, 96px); font-weight:200; color:var(--bright); margin-bottom:4px; letter-spacing:-2px; }
+  .results-stats { font-size:17px; color:var(--mid); margin-bottom:8px; }
+  .results-streak { font-size:15px; color:var(--gold-dim); margin-bottom:36px; }
+  .mode-breakdown { display:flex; gap:12px; flex-wrap:wrap; justify-content:center; margin-bottom:36px; }
+  .mode-stat { padding:14px 22px; background:#fff; border:1px solid rgba(0,0,0,0.08); border-radius:8px; text-align:center; min-width:90px;
+    box-shadow:0 1px 3px rgba(0,0,0,0.04); }
+  .mode-stat .ms-label { font-size:10px; letter-spacing:2px; color:var(--dim); text-transform:uppercase; margin-bottom:6px; }
+  .mode-stat .ms-val { font-size:24px; font-weight:300; color:var(--bright); }
+  .mode-stat .ms-val .ms-total { font-size:14px; color:var(--dim); }
+  .missed-section { width:100%; max-width:500px; margin-bottom:36px; }
+  .missed-title { font-size:10px; letter-spacing:3px; color:var(--dim); text-transform:uppercase; text-align:center; margin-bottom:10px; }
+  .missed-list { max-height:200px; overflow-y:auto; }
+  .missed-row { display:flex; justify-content:space-between; align-items:center; padding:10px 14px; border-radius:4px; font-size:15px; }
+  .missed-row:nth-child(even) { background:rgba(0,0,0,0.03); }
+  .missed-row .mr-label { color:var(--dim); }
+  .missed-row .mr-yours { color:var(--red); margin-right:18px; text-decoration:line-through; opacity:0.7; }
+  .missed-row .mr-correct { color:var(--green); font-weight:500; }
+  .again-btn { padding:16px 60px; background:var(--gold); border-radius:8px; color:#fff;
+    font-size:17px; font-weight:700; letter-spacing:2px; text-transform:uppercase; }
+
+  /* ═══ DESKTOP OVERRIDES ═══ */
+  @media (min-width:769px) {
+    .keypad { display:none !important; }
+    .input-area { display:none; }
+    .q-tip { display:none; }
+    .desktop-input-wrap, .q-feedback-desktop, .q-tip-desktop { display:block; }
+    .game-ref { display:block; }
+    .q-solve { font-size:50px; margin-bottom:28px; }
+    .q-givens { margin-bottom:32px; }
+    .q-given-row { margin-bottom:10px; }
+    .q-given-key { font-size:24px; min-width:80px; }
+    .q-given-eq { font-size:24px; }
+    .q-given-val { font-size:26px; min-width:80px; }
+    .q-mode { font-size:12px; letter-spacing:5px; margin-bottom:20px; }
+    .game-timer { font-size:32px; }
+    .game-score-val { font-size:30px; }
+  }
+
+  /* Small phones */
+  @media (max-height:700px) {
+    .kp-btn { padding:11px 0; font-size:20px; }
+    .kp-enter { font-size:16px; }
+    .q-solve { font-size:30px; margin-bottom:8px; }
+    .q-given-row { margin-bottom:3px; }
+    .q-given-key, .q-given-val { font-size:17px; }
+    .q-mode { margin-bottom:5px; font-size:10px; }
+    .q-tip { font-size:11px; margin-bottom:6px; }
+    .q-display { font-size:22px; min-height:42px; padding:8px 12px; width:180px; }
+    .q-overlay { font-size:22px; }
+  }
+
+  @media (max-width:480px) {
+    .identity-card { padding:12px 14px; }
+    .identity-row .formula { font-size:12px; }
+    .mode-btn { padding:12px 14px; min-width:80px; font-size:14px; }
+  }
 </style>
 </head>
 <body>
-<div id="root"></div>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.9/babel.min.js"></script>
-<script type="text/babel">
-const {useState,useCallback,useMemo,useEffect,useRef}=React;
 
-/* ═══ MATH ═══ */
-const R2=n=>Math.round(n*100)/100;
-const R3=n=>Math.round(n*1000)/1000;
-const R4=n=>Math.round(n*10000)/10000;
-const rand=(a,b)=>a+Math.random()*(b-a);
-const randInt=(a,b)=>Math.floor(rand(a,b+1));
-const pick=a=>a[Math.floor(Math.random()*a.length)];
-const clamp=(v,lo,hi)=>Math.max(lo,Math.min(hi,v));
+<!-- ═══ MENU ═══ -->
+<div id="menuScreen" class="screen active">
+  <div class="menu-label">Put-Call Parity</div>
+  <div class="menu-title">Parity Drill</div>
+  <div class="menu-sub">Speed drill · solve for the missing variable</div>
+  <div class="identity-card">
+    <h3>Core Identities</h3>
+    <div class="identity-row"><span class="name">Parity</span><span class="formula">C − P = S + r/c − K</span></div>
+    <div class="identity-row"><span class="name">Combo</span><span class="formula">Combo = C − P = S + r/c − K</span></div>
+    <div class="identity-row"><span class="name">Straddle</span><span class="formula">Straddle = C + P</span></div>
+    <div class="identity-row"><span class="name indent">→ Solve C</span><span class="formula">C = (Str + Combo) / 2</span></div>
+    <div class="identity-row"><span class="name indent">→ Solve P</span><span class="formula">P = (Str − Combo) / 2</span></div>
+    <div class="identity-row"><span class="name">Buy/Write</span><span class="formula">B/W = C − intrinsic = P + r/c</span></div>
+  </div>
+  <div class="mode-grid" id="modeGrid"></div>
+  <div class="time-row" id="timeRow"><span class="label">Time:</span></div>
+  <label class="toggle-row">
+    <input type="checkbox" id="showIdToggle" checked>
+    Show identity tip during game
+  </label>
+  <button class="start-btn" onclick="startGame()">Start</button>
+  <div class="credit">Inspired by the SIG parity game &amp; Kris Abdelmessih's Moontower</div>
+</div>
 
-function legPnl(leg,S){
-  const raw=leg.type==="call"?Math.max(0,S-leg.K):Math.max(0,leg.K-S);
-  return(leg.side==="long"?raw-leg.prem:leg.prem-raw)*leg.qty;
-}
-function netDelta(legs){
-  return legs.reduce((s,l)=>s+(l.type==="call"?1:-1)*(l.side==="long"?1:-1)*l.delta*l.qty,0);
-}
-function totalPnl(legs,spot,S,hedged){
-  let pnl=legs.reduce((s,l)=>s+legPnl(l,S),0);
-  if(hedged)pnl+=-netDelta(legs)*(S-spot);
-  return pnl;
-}
-function findBreakevens(legs,spot,hedged){
-  const Ks=legs.map(l=>l.K);
-  const lo=Math.min(spot,...Ks)-20,hi=Math.max(spot,...Ks)+20;
-  const step=0.002,bes=[];
-  let prev=totalPnl(legs,spot,lo,hedged);
-  for(let s=lo+step;s<=hi;s+=step){
-    const cur=totalPnl(legs,spot,s,hedged);
-    if((prev<0&&cur>=0)||(prev>0&&cur<=0))bes.push(R3(s-step*(cur/(cur-prev))));
-    prev=cur;
-  }
-  return[...new Set(bes)].sort((a,b)=>a-b);
-}
-function payoffCurve(legs,spot,hedged){
-  const Ks=legs.map(l=>l.K);
-  const lo=Math.min(spot,...Ks)-12,hi=Math.max(spot,...Ks)+12,pts=[];
-  for(let s=lo;s<=hi;s+=0.15)pts.push({s:R2(s),pnl:R4(totalPnl(legs,spot,s,hedged))});
-  return pts;
-}
+<!-- ═══ GAME — flex column: top bar → question → keypad → progress ═══ -->
+<div id="gameScreen" class="screen">
+  <div class="game-top">
+    <div class="game-score-area">
+      <div><span class="game-score-label">SCORE</span><span class="game-score-val" id="gScore">0</span></div>
+      <span class="game-streak" id="gStreak"></span>
+    </div>
+    <div class="game-timer-area">
+      <button class="finish-btn" id="finishBtn" onclick="endGame()" style="display:none">Finish</button>
+      <div class="game-timer" id="gTimer">2:00</div>
+    </div>
+  </div>
 
-/* ═══ SOLUTION WALKTHROUGH GENERATOR ═══ */
-// Builds a step-by-step explanation anchored on the strike(s), slopes, and walk to breakevens.
-function buildSolution(legs,spot,hedged){
-  const strikes=[...new Set(legs.map(l=>l.K))].sort((a,b)=>a-b);
-  const nd=R3(netDelta(legs));
-  const hedgeShares=R3(Math.abs(nd));
-  const hedgeDir=nd>0?"short":"long"; // hedge offsets net delta
+  <div class="game-ref" id="gameRef">
+    <div class="ref-label">REF</div>
+    C − P = S + r/c − K<br>Combo = C − P<br>Straddle = C + P<br>B/W = C − intrinsic
+  </div>
 
-  // Net premium: sum of (collected - paid) across legs, per share
-  let netPrem=0;
-  legs.forEach(l=>{ netPrem += (l.side==="long"? -l.prem : l.prem)*l.qty; });
-  netPrem=R3(netPrem);
+  <div class="game-mid">
+    <div class="q-mode" id="qMode"></div>
+    <div class="q-solve" id="qSolve"></div>
+    <div class="q-givens" id="qGivens"></div>
+    <div class="input-area">
+      <div class="q-display" id="qDisplay">—</div>
+      <div class="q-overlay" id="qOverlay"></div>
+    </div>
+    <div class="q-tip" id="qTip"></div>
+    <div class="desktop-input-wrap">
+      <form onsubmit="handleDesktopSubmit(event)">
+        <input type="text" class="q-input-desktop" id="qInputDesktop" autocomplete="off" placeholder="—">
+      </form>
+    </div>
+    <div class="q-feedback-desktop" id="qFeedbackDesktop"></div>
+    <div class="q-tip-desktop" id="qTipDesktop"></div>
+  </div>
 
-  // Slope of P&L just to the right of a given spot (per $1 up)
-  const slopeAt=(S)=>{
-    const eps=0.01;
-    return R3((totalPnl(legs,spot,S+eps,hedged)-totalPnl(legs,spot,S-eps,hedged))/(2*eps));
-  };
+  <div class="keypad">
+    <button class="kp-btn" onclick="kpPress('1')">1</button>
+    <button class="kp-btn" onclick="kpPress('2')">2</button>
+    <button class="kp-btn" onclick="kpPress('3')">3</button>
+    <button class="kp-btn" onclick="kpPress('4')">4</button>
+    <button class="kp-btn" onclick="kpPress('5')">5</button>
+    <button class="kp-btn" onclick="kpPress('6')">6</button>
+    <button class="kp-btn" onclick="kpPress('7')">7</button>
+    <button class="kp-btn" onclick="kpPress('8')">8</button>
+    <button class="kp-btn" onclick="kpPress('9')">9</button>
+    <button class="kp-btn kp-dot" onclick="kpPress('.')">.</button>
+    <button class="kp-btn" onclick="kpPress('0')">0</button>
+    <button class="kp-btn kp-del" onclick="kpDelete()">←</button>
+    <button class="kp-btn kp-neg" onclick="kpNeg()">±</button>
+    <button class="kp-btn kp-enter" onclick="kpSubmit()">Enter</button>
+  </div>
 
-  // Region midpoints between strikes for slope reporting
-  const lo=strikes[0]-15, hi=strikes[strikes.length-1]+15;
-  const bounds=[lo,...strikes,hi];
-  const regions=[];
-  for(let i=0;i<bounds.length-1;i++){
-    const mid=(bounds[i]+bounds[i+1])/2;
-    regions.push({
-      left:i===0?null:strikes[i-1],
-      right:i===bounds.length-2?null:strikes[i],
-      slope:slopeAt(mid),
-    });
-  }
+  <div class="progress-bar" id="progressBar">
+    <div class="progress-fill" id="progressFill" style="width:100%"></div>
+  </div>
+</div>
 
-  const bes=findBreakevens(legs,spot,hedged).filter(b=>b>=0);
+<!-- ═══ RESULTS ═══ -->
+<div id="resultsScreen" class="screen">
+  <div class="results-label" id="rLabel">Time's Up</div>
+  <div class="results-score" id="rScore">0</div>
+  <div class="results-stats" id="rStats"></div>
+  <div class="results-streak" id="rStreak"></div>
+  <div class="mode-breakdown" id="rBreakdown"></div>
+  <div class="missed-section" id="rMissed"></div>
+  <button class="again-btn" onclick="goMenu()">Play Again</button>
+</div>
 
-  // P&L at each strike (the anchors)
-  const anchors=strikes.map(K=>({K,pnl:R3(totalPnl(legs,spot,K,hedged))}));
-
-  // Build narrative steps
-  const steps=[];
-
-  // Step 1: premium
-  const premLines=legs.map(l=>{
-    const verb=l.side==="long"?"pay":"collect";
-    const sign=l.side==="long"?"−":"+";
-    const q=l.qty>1?`${l.qty}× `:"";
-    return `${q}${l.side} ${l.type} @ ${l.K}: ${verb} ${sign}${R3(l.prem*l.qty)}`;
-  });
-  steps.push({
-    title:"1 · Net premium",
-    lines:[
-      ...premLines,
-      `Net premium = ${netPrem>=0?"+":""}${netPrem} per share ${netPrem>=0?"(credit)":"(debit)"}`,
-    ],
-  });
-
-  // Step 2: hedge (if hedged)
-  if(hedged && hedgeShares>0.001){
-    steps.push({
-      title:"2 · The hedge",
-      lines:[
-        `Net Δ = ${nd>=0?"+":""}${nd} → hedge ${hedgeShares} shares ${hedgeDir} @ ${spot}`,
-        `The hedge adds a sloped stock P&L: ${hedgeDir==="short"?"gains":"loses"} as price falls, ${hedgeDir==="short"?"loses":"gains"} as price rises.`,
-      ],
-    });
-  } else {
-    steps.push({
-      title:"2 · The hedge",
-      lines:["Unhedged — no stock leg. Each option slopes at 1.0 per $ once in-the-money, 0 when out-of-the-money."],
-    });
-  }
-
-  // Step 3: anchor(s) at the strike(s)
-  const anchorLines=anchors.map(a=>{
-    return `At K=${a.K} (spot finishes here): P&L = ${a.pnl>=0?"+":""}${a.pnl}`;
-  });
-  const peak=anchors.reduce((m,a)=>Math.abs(a.pnl)>Math.abs(m.pnl)?a:m,anchors[0]);
-  anchorLines.push(`This is your anchor — known P&L at a strike where options are worth 0 (only premium${hedged?" + hedge":""} remain).`);
-  steps.push({ title:`${hedged&&hedgeShares>0.001?"3":"3"} · Anchor at the strike${strikes.length>1?"s":""}`, lines:anchorLines });
-
-  // Step 4: slopes per region
-  const slopeLines=regions.map(r=>{
-    let label;
-    if(r.left===null) label=`Below ${r.right}`;
-    else if(r.right===null) label=`Above ${r.left}`;
-    else label=`Between ${r.left} and ${r.right}`;
-    const s=r.slope;
-    const desc=Math.abs(s)<0.001?"flat (max profit/loss plateau)":`slope ${s>0?"+":""}${s} per $1 up`;
-    return `${label}: ${desc}`;
-  });
-  slopeLines.push("Slope = how fast P&L changes per $1 move. Hedged single options split into (hedge ratio) on the OTM side and (1 − hedge ratio) on the ITM side — they sum to 1.");
-  steps.push({ title:"4 · Slope in each region", lines:slopeLines });
-
-  // Step 5: walk to breakevens
-  const beLines=bes.map(be=>{
-    // Find nearest strike anchor and slope used
-    let nearest=strikes[0], minD=Infinity;
-    strikes.forEach(K=>{ if(Math.abs(K-be)<minD){minD=Math.abs(K-be);nearest=K;} });
-    const anchorPnl=R3(totalPnl(legs,spot,nearest,hedged));
-    const dir=be>nearest?"above":"below";
-    const slope=slopeAt((be+nearest)/2);
-    const dist=R3(Math.abs(be-nearest));
-    return `BE ${be}: from K=${nearest} (P&L ${anchorPnl>=0?"+":""}${anchorPnl}), walk ${dir} ${nearest} ${dir==="above"?"+":"−"} ${Math.abs(anchorPnl)}/${Math.abs(slope)} = ${nearest} ${dir==="above"?"+":"−"} ${dist} = ${be}`;
-  });
-  if(bes.length===0) beLines.push("No positive breakeven — position is always profit or always loss in the positive-price region.");
-  steps.push({ title:"5 · Walk out: strike ± P&L ÷ slope", lines:beLines });
-
-  return { steps, breakevens:bes, netPrem, nd, hedgeShares, hedgeDir };
-}
-
-/* ═══ STRUCTURE GEN ═══ */
-function calcDelta(spot,K,type){
-  const m=(spot-K)/spot;
-  return type==="call"?R2(clamp(0.5+m*2.8,0.04,0.96)):R2(clamp(0.5-m*2.8,0.04,0.96));
-}
-function calcPrem(spot,K,type,delta){
-  const intr=type==="call"?Math.max(0,spot-K):Math.max(0,K-spot);
-  return R2(Math.max(0.05,intr+spot*0.025*(1-Math.abs(delta-0.5)*1.4)));
-}
-function mkLeg(spot,K,type,side,qty=1){
-  K=Math.round(K);
-  const delta=calcDelta(spot,K,type);
-  return{type,side,K,delta,prem:calcPrem(spot,K,type,delta),qty};
-}
-function genM(){return pick(["OTM","ATM","ITM"])}
-function sAndK(m,t){
-  const spot=R2(rand(25,95)),off=randInt(2,5);
-  let K;
-  if(m==="ATM")K=Math.round(spot);
-  else if(m==="ITM")K=t==="call"?Math.round(spot)-off:Math.round(spot)+off;
-  else K=t==="call"?Math.round(spot)+off:Math.round(spot)-off;
-  return{spot,K:Math.max(2,K)};
-}
-
-// Max profit / max loss over a wide price range. Returns {maxP, maxL, maxPUnbounded, maxLUnbounded}
-function maxProfitLoss(legs,spot,hedged){
-  const Ks=legs.map(l=>l.K);
-  const lo=0.01,hi=Math.max(spot,...Ks)*3+50;
-  let maxP=-Infinity,maxL=Infinity;
-  // sample at fine grid plus exact strikes (kinks live at strikes)
-  const pts=new Set([lo,hi,...Ks]);
-  for(let s=lo;s<=hi;s+=0.25)pts.add(R2(s));
-  [...pts].forEach(s=>{
-    const p=totalPnl(legs,spot,s,hedged);
-    if(p>maxP)maxP=p;
-    if(p<maxL)maxL=p;
-  });
-  // Detect unbounded behavior. Price floors at 0, so the downside is always bounded;
-  // only the upside (price → ∞) can produce a truly unlimited profit or loss.
-  const farHi=totalPnl(legs,spot,hi,hedged),farHi2=totalPnl(legs,spot,hi-1,hedged);
-  const upSlope=farHi-farHi2;
-  const maxPUnbounded=upSlope>0.001;   // P&L still rising at the far upside
-  const maxLUnbounded=upSlope<-0.001;  // P&L still falling at the far upside
-  return{maxP:R3(maxP),maxL:R3(maxL),maxPUnbounded,maxLUnbounded};
-}
-
-const STRUCTS={
-  "Long Call":()=>{const m=genM(),{spot,K}=sAndK(m,"call");return{name:`Long Call (${m})`,spot,legs:[mkLeg(spot,K,"call","long")]};},
-  "Short Call":()=>{const m=genM(),{spot,K}=sAndK(m,"call");return{name:`Short Call (${m})`,spot,legs:[mkLeg(spot,K,"call","short")]};},
-  "Long Put":()=>{const m=genM(),{spot,K}=sAndK(m,"put");return{name:`Long Put (${m})`,spot,legs:[mkLeg(spot,K,"put","long")]};},
-  "Short Put":()=>{const m=genM(),{spot,K}=sAndK(m,"put");return{name:`Short Put (${m})`,spot,legs:[mkLeg(spot,K,"put","short")]};},
-  "Straddle":()=>{const side=pick(["long","short"]),spot=R2(rand(30,85)),K=Math.round(spot);return{name:`${side==="long"?"Long":"Short"} Straddle`,spot,legs:[mkLeg(spot,K,"call",side),mkLeg(spot,K,"put",side)]};},
-  "Strangle":()=>{const side=pick(["long","short"]),spot=R2(rand(30,85)),w=randInt(2,5);return{name:`${side==="long"?"Long":"Short"} Strangle`,spot,legs:[mkLeg(spot,Math.round(spot)+w,"call",side),mkLeg(spot,Math.round(spot)-w,"put",side)]};},
-  "Vertical Spread":()=>{
-    const t=pick(["call","put"]),dir=pick(["Bull","Bear"]),spot=R2(rand(30,85)),w=randInt(2,5),mid=Math.round(spot),loK=mid-w,hiK=mid+w;
-    let legs;if(t==="call")legs=dir==="Bull"?[mkLeg(spot,loK,"call","long"),mkLeg(spot,hiK,"call","short")]:[mkLeg(spot,hiK,"call","long"),mkLeg(spot,loK,"call","short")];
-    else legs=dir==="Bull"?[mkLeg(spot,loK,"put","long"),mkLeg(spot,hiK,"put","short")]:[mkLeg(spot,hiK,"put","long"),mkLeg(spot,loK,"put","short")];
-    return{name:`${dir} ${t==="call"?"Call":"Put"} Spread`,spot,legs};
-  },
-  "Butterfly":()=>{
-    const t=pick(["call","put"]),side=pick(["long","short"]),spot=R2(rand(35,75)),w=randInt(2,5),midK=Math.round(spot);
-    const o=side==="long"?"long":"short",inn=side==="long"?"short":"long";
-    return{name:`${side==="long"?"Long":"Short"} ${t==="call"?"Call":"Put"} Fly`,spot,legs:[mkLeg(spot,midK-w,t,o),{...mkLeg(spot,midK,t,inn),qty:2},mkLeg(spot,midK+w,t,o)]};
-  },
-  "Ratio Spread":()=>{
-    const t=pick(["call","put"]),spot=R2(rand(35,75)),w=randInt(2,5),ratio=pick([2,3]);
-    let longK,shortK;if(t==="call"){longK=Math.round(spot)-randInt(0,2);shortK=longK+w;}else{longK=Math.round(spot)+randInt(0,2);shortK=longK-w;}
-    return{name:`1×${ratio} ${t==="call"?"Call":"Put"} Ratio`,spot,legs:[mkLeg(spot,longK,t,"long"),{...mkLeg(spot,shortK,t,"short"),qty:ratio}]};
-  },
-  "Iron Condor":()=>{
-    const spot=R2(rand(35,75)),mid=Math.round(spot),w1=randInt(3,6),w2=randInt(2,4);
-    const putShort=mid-w1,putLong=putShort-w2,callShort=mid+w1,callLong=callShort+w2;
-    return{name:"Iron Condor",spot,legs:[
-      mkLeg(spot,putLong,"put","long"),mkLeg(spot,putShort,"put","short"),
-      mkLeg(spot,callShort,"call","short"),mkLeg(spot,callLong,"call","long"),
-    ]};
-  },
-  "Iron Butterfly":()=>{
-    const spot=R2(rand(35,75)),mid=Math.round(spot),w=randInt(3,6);
-    return{name:"Iron Butterfly",spot,legs:[
-      mkLeg(spot,mid-w,"put","long"),mkLeg(spot,mid,"put","short"),
-      mkLeg(spot,mid,"call","short"),mkLeg(spot,mid+w,"call","long"),
-    ]};
-  },
-  "Jade Lizard":()=>{
-    const spot=R2(rand(35,75)),mid=Math.round(spot);
-    const putK=mid-randInt(2,5),callShort=mid+randInt(2,4),callLong=callShort+randInt(2,4);
-    return{name:"Jade Lizard",spot,legs:[
-      mkLeg(spot,putK,"put","short"),
-      mkLeg(spot,callShort,"call","short"),mkLeg(spot,callLong,"call","long"),
-    ]};
-  },
-  "Twisted Sister":()=>{
-    const spot=R2(rand(35,75)),mid=Math.round(spot);
-    const callK=mid+randInt(2,5),putShort=mid-randInt(2,4),putLong=putShort-randInt(2,4);
-    return{name:"Twisted Sister",spot,legs:[
-      mkLeg(spot,callK,"call","short"),
-      mkLeg(spot,putShort,"put","short"),mkLeg(spot,putLong,"put","long"),
-    ]};
-  },
-  "Big Lizard":()=>{
-    const spot=R2(rand(35,75)),mid=Math.round(spot),w=randInt(3,6);
-    return{name:"Big Lizard",spot,legs:[
-      mkLeg(spot,mid,"put","short"),mkLeg(spot,mid,"call","short"),
-      mkLeg(spot,mid+w,"call","long"),
-    ]};
-  },
-  "Composite":()=>{
-    const spot=R2(rand(35,75)),n=randInt(2,4),legs=[];
-    for(let i=0;i<n;i++){const t=pick(["call","put"]),side=pick(["long","short"]),K=Math.max(5,Math.round(spot)+randInt(-6,6));legs.push(mkLeg(spot,K,t,side,randInt(1,2)));}
-    return{name:"Composite",spot,legs};
-  },
-};
-
-// Structures that should only be unhedged (already ~delta-neutral or premium-selling strategies)
-const UNHEDGED_ONLY=new Set(["Iron Condor","Iron Butterfly","Jade Lizard","Twisted Sister","Big Lizard"]);
-
-const STRUCT_KEYS=Object.keys(STRUCTS);
-const STRUCT_GROUPS=[
-  {label:"Single Legs",keys:["Long Call","Short Call","Long Put","Short Put"]},
-  {label:"Volatility",keys:["Straddle","Strangle"]},
-  {label:"Spreads",keys:["Vertical Spread","Butterfly","Ratio Spread"]},
-  {label:"Iron Structures",keys:["Iron Condor","Iron Butterfly"]},
-  {label:"Lizards",keys:["Jade Lizard","Twisted Sister","Big Lizard"]},
-  {label:"Complex",keys:["Composite"]},
+<script>
+const MODES = [
+  { id:'putcall', label:'Put-Call', desc:'C, P, S, r/c' },
+  { id:'combo', label:'Combo', desc:'Combo ↔ option' },
+  { id:'straddle', label:'Straddle', desc:'Straddle → C or P' },
+  { id:'buywrite', label:'B/W', desc:'Buy/Write → C or P' },
+];
+const TIMES = [
+  { label:'1 min', sec:60 },
+  { label:'2 min', sec:120 },
+  { label:'4 min', sec:240 },
+  { label:'∞', sec:null },
 ];
 
-/* ═══ CHART ═══ */
-function Chart({data,breakevens,spot,strikes,legs,hedged}){
-  const W=560,H=320,P={t:30,r:28,b:58,l:56},cw=W-P.l-P.r,ch=H-P.t-P.b;
-  const xMin=data[0].s,xMax=data[data.length-1].s,pnls=data.map(d=>d.pnl);
-  const yMin=Math.min(...pnls,0),yMax=Math.max(...pnls,0),yPad=Math.max((yMax-yMin)*0.12,0.3);
-  const sx=v=>P.l+((v-xMin)/(xMax-xMin))*cw;
-  const sy=v=>P.t+ch-((v-(yMin-yPad))/(yMax+yPad-(yMin-yPad)))*ch;
-  const zeroY=sy(0);
-  const lineD=data.map((d,i)=>`${i===0?"M":"L"}${sx(d.s)},${sy(d.pnl)}`).join(" ");
-  const xStep=Math.max(1,Math.ceil((xMax-xMin)/7)),xTicks=[];
-  for(let v=Math.ceil(xMin);v<=xMax;v+=xStep)xTicks.push(v);
-  const yRange=yMax+yPad-(yMin-yPad),yStep=Math.max(0.25,Math.ceil((yRange/5)*4)/4),yTicks=[];
-  for(let v=Math.ceil((yMin-yPad)/yStep)*yStep;v<=yMax+yPad;v+=yStep)yTicks.push(R2(v));
+let activeModes=new Set(['putcall']), duration=120, showIdentities=true;
+let score=0,streak=0,bestStreak=0,elapsed=0,timeLeft=120;
+let question=null,feedback=null,history=[],timerInterval=null,inputStr='';
 
-  const allK=[...new Set((legs||[]).map(l=>l.K))].sort((a,b)=>a-b);
-  const boundaries=[xMin,...allK,xMax];
-  const regions=[];
-  for(let i=0;i<boundaries.length-1;i++){
-    const mid=(boundaries[i]+boundaries[i+1])/2;
-    const eps=0.05;
-    const p1=totalPnl(legs||[],spot,mid-eps,hedged);
-    const p2=totalPnl(legs||[],spot,mid+eps,hedged);
-    const slope=R2((p2-p1)/(2*eps));
-    if(mid>=xMin&&mid<=xMax)regions.push({x:mid,slope});
+const ri=(a,b)=>Math.floor(Math.random()*(b-a+1))+a;
+const rp=(a,b)=>parseFloat((Math.random()*(b-a)+a).toFixed(2));
+const r2=v=>parseFloat(v.toFixed(2));
+
+function genPutCall(){
+  const K=ri(2,20)*5,S=r2(K+rp(-8,8)),rc=r2(rp(0.05,0.40)),combo=r2(S+rc-K),p=Math.random();
+  if(p<.25){const P=r2(rp(.2,5)),C=r2(P+combo);if(C<.01)return genPutCall();return{given:{P,"r/c":rc,S,K},solve:"C",answer:C};}
+  if(p<.5){const C=r2(rp(.2,6)),P=r2(C-combo);if(P<.01)return genPutCall();return{given:{C,"r/c":rc,S,K},solve:"P",answer:P};}
+  if(p<.75){const P=r2(rp(.2,5)),C=r2(P+combo);if(C<.01)return genPutCall();return{given:{C,P,"r/c":rc,K},solve:"S",answer:S};}
+  const P=r2(rp(.2,5)),C=r2(P+combo);if(C<.01)return genPutCall();return{given:{C,P,S,K},solve:"r/c",answer:rc};
+}
+function genCombo(){
+  const K=ri(2,20)*5,S=r2(K+rp(-8,8)),rc=r2(rp(0.05,0.40)),combo=r2(S+rc-K);
+  const P=r2(rp(.2,5)),C=r2(P+combo);if(C<.01)return genCombo();
+  return Math.random()<.5?{given:{P,Combo:combo},solve:"C",answer:C}:{given:{C,Combo:combo},solve:"P",answer:P};
+}
+function genStraddle(){
+  const K=ri(2,20)*5,S=r2(K+rp(-8,8)),rc=r2(rp(0.05,0.40)),combo=r2(S+rc-K);
+  const P=r2(rp(.3,5)),C=r2(P+combo);if(C<.01)return genStraddle();const str=r2(C+P);
+  return Math.random()<.5?{given:{Straddle:str,"r/c":rc,S,K},solve:"C",answer:C}:{given:{Straddle:str,"r/c":rc,S,K},solve:"P",answer:P};
+}
+function genBuyWrite(){
+  const K=ri(2,20)*5,S=r2(K+rp(.5,12)),rc=r2(rp(0.05,0.40)),combo=r2(S+rc-K);
+  const P=r2(rp(.2,4)),C=r2(P+combo);if(C<.1)return genBuyWrite();
+  const intr=Math.max(0,r2(S-K)),bw=r2(C-intr);if(bw<.05)return genBuyWrite();
+  return Math.random()<.5?{given:{"B/W":bw,"r/c":rc,S,K},solve:"C",answer:C}:{given:{"B/W":bw,"r/c":rc,S,K},solve:"P",answer:P};
+}
+const gens={putcall:genPutCall,combo:genCombo,straddle:genStraddle,buywrite:genBuyWrite};
+
+function getTip(q){
+  const s=q.solve,g=q.given;
+  if(g.Combo!==undefined){if(s==="C")return{name:"Combo",f:"C = P + Combo"};if(s==="P")return{name:"Combo",f:"P = C − Combo"};}
+  if(g.Straddle!==undefined){if(s==="C")return{name:"Straddle",f:"C = (Straddle + Combo) / 2"};if(s==="P")return{name:"Straddle",f:"P = (Straddle − Combo) / 2"};}
+  if(g["B/W"]!==undefined){if(s==="C")return{name:"Buy/Write",f:"B/W = C − intrinsic"};if(s==="P")return{name:"Buy/Write",f:"B/W = P + r/c"};}
+  if(s==="C")return{name:"Parity",f:"C − P = S + r/c − K"};
+  if(s==="P")return{name:"Parity",f:"C − P = S + r/c − K"};
+  if(s==="S")return{name:"Parity",f:"C − P = S + r/c − K"};
+  if(s==="r/c")return{name:"Parity",f:"C − P = S + r/c − K"};
+  return null;
+}
+
+function showScreen(id){document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));document.getElementById(id).classList.add('active');}
+
+function buildMenu(){
+  const mg=document.getElementById('modeGrid');mg.innerHTML='';
+  MODES.forEach(m=>{const b=document.createElement('button');b.className='mode-btn'+(activeModes.has(m.id)?' on':'');
+    b.innerHTML=m.label+'<div class="desc">'+m.desc+'</div>';
+    b.onclick=()=>{if(activeModes.has(m.id)&&activeModes.size>1)activeModes.delete(m.id);else activeModes.add(m.id);buildMenu();};mg.appendChild(b);});
+  const tr=document.getElementById('timeRow');tr.innerHTML='<span class="label">Time:</span>';
+  TIMES.forEach(t=>{const b=document.createElement('button');b.className='time-btn'+(duration===t.sec?' on':'');
+    b.textContent=t.label;b.onclick=()=>{duration=t.sec;buildMenu();};tr.appendChild(b);});
+}
+
+function newQuestion(){
+  const pool=[...activeModes],mid=pool[Math.floor(Math.random()*pool.length)];
+  question=gens[mid]();question.mode=MODES.find(m=>m.id===mid).label;feedback=null;renderQuestion();
+}
+
+function renderQuestion(){
+  document.getElementById('qMode').textContent=question.mode;
+  document.getElementById('qSolve').innerHTML=question.solve+' = <span class="q-mark">?</span>';
+  const gDiv=document.getElementById('qGivens');gDiv.innerHTML='';
+  Object.entries(question.given).forEach(([k,v])=>{
+    gDiv.innerHTML+='<div class="q-given-row"><span class="q-given-key">'+k+'</span><span class="q-given-eq">=</span><span class="q-given-val">'+v+'</span></div>';
+  });
+  const tip=showIdentities?getTip(question):null;
+  const tipStr=tip?tip.f:'';
+  // Mobile
+  inputStr='';renderDisplay();
+  document.getElementById('qTip').textContent=tipStr;
+  // Desktop tip
+  document.getElementById('qTipDesktop').textContent=tipStr;
+  const ov=document.getElementById('qOverlay');ov.textContent='';ov.classList.remove('show');
+  // Desktop
+  const d=document.getElementById('qInputDesktop');if(d){d.value='';d.className='q-input-desktop';d.disabled=false;d.focus();}
+  document.getElementById('qFeedbackDesktop').textContent='';
+}
+
+function renderDisplay(){
+  const d=document.getElementById('qDisplay');
+  if(!inputStr){d.textContent='—';d.className='q-display empty';}
+  else{d.textContent=inputStr;d.className='q-display';}
+}
+
+function submitAnswer(val){
+  if(isNaN(val)||feedback!==null)return;
+  const correct=Math.abs(val-question.answer)<0.015;
+  history.push({...question,userAnswer:val,correct});
+  const d=document.getElementById('qDisplay'),dI=document.getElementById('qInputDesktop'),ov=document.getElementById('qOverlay');
+  if(correct){
+    score++;streak++;if(streak>bestStreak)bestStreak=streak;
+    d.className='q-display correct';if(dI)dI.className='q-input-desktop correct';
+    document.getElementById('gScore').textContent=score;
+    document.getElementById('gStreak').textContent=streak>=3?'🔥 '+streak+'×':'';
+    feedback='correct';setTimeout(newQuestion,180);
+  }else{
+    streak=0;d.className='q-display wrong';
+    ov.textContent=question.answer;ov.classList.add('show');
+    if(dI){dI.className='q-input-desktop wrong';dI.disabled=true;}
+    document.getElementById('qFeedbackDesktop').textContent=question.answer;
+    document.getElementById('gStreak').textContent='';
+    feedback=question.answer;setTimeout(newQuestion,1400);
   }
-
-  // Stagger BE labels that are too close together
-  const beLabels=breakevens.map((be,i)=>{
-    const px=sx(be);
-    let yOff=-36; // default above zero line
-    // Check if this label overlaps with previous ones
-    for(let j=0;j<i;j++){
-      const prevPx=sx(breakevens[j]);
-      if(Math.abs(px-prevPx)<55){
-        yOff=14; // put below zero line instead
-        break;
-      }
-    }
-    return{be,px,yOff};
-  });
-
-  return(
-    <svg viewBox={`0 0 ${W} ${H}`} style={{width:"100%",maxWidth:580,height:"auto",display:"block"}}>
-      {yTicks.map(v=><line key={v} x1={P.l} x2={W-P.r} y1={sy(v)} y2={sy(v)} stroke="#e8e8ee" strokeWidth="0.7"/>)}
-      <line x1={P.l} x2={W-P.r} y1={zeroY} y2={zeroY} stroke="#b0b0c0" strokeWidth="1.2"/>
-      {xTicks.map(v=><text key={v} x={sx(v)} y={H-P.b+16} textAnchor="middle" fill="#888" fontSize="10" fontFamily="'DM Mono',monospace">{v}</text>)}
-      {yTicks.map(v=><text key={v} x={P.l-8} y={sy(v)+3.5} textAnchor="end" fill="#888" fontSize="10" fontFamily="'DM Mono',monospace">{v.toFixed(2)}</text>)}
-      <clipPath id="above"><rect x={P.l} y={P.t} width={cw} height={zeroY-P.t}/></clipPath>
-      <clipPath id="below"><rect x={P.l} y={zeroY} width={cw} height={P.t+ch-zeroY}/></clipPath>
-      <path d={`${lineD} L${sx(xMax)},${zeroY} L${sx(xMin)},${zeroY} Z`} fill="#16a34a" opacity={0.08} clipPath="url(#above)"/>
-      <path d={`${lineD} L${sx(xMax)},${zeroY} L${sx(xMin)},${zeroY} Z`} fill="#dc2626" opacity={0.08} clipPath="url(#below)"/>
-      <path d={lineD} fill="none" stroke="#2563eb" strokeWidth="2.5" strokeLinejoin="round"/>
-      {strikes.map((k,i)=><g key={`k${i}`}><line x1={sx(k)} x2={sx(k)} y1={P.t} y2={P.t+ch} stroke="#f59e0b" strokeWidth="1" strokeDasharray="4,3" opacity="0.7"/><text x={sx(k)} y={P.t-6} textAnchor="middle" fill="#d97706" fontSize="9" fontWeight="600" fontFamily="'DM Mono',monospace">K={k}</text></g>)}
-      {regions.map((r,i)=>(
-        <g key={`d${i}`}>
-          <rect x={sx(r.x)-26} y={P.t+2} width="52" height="16" rx="4" fill="#f0f9ff" stroke="#bfdbfe" strokeWidth="0.7" opacity="0.9"/>
-          <text x={sx(r.x)} y={P.t+13} textAnchor="middle" fill="#2563eb" fontSize="9" fontWeight="600" fontFamily="'DM Mono',monospace">Δ={r.slope>0?"+":""}{r.slope}</text>
-        </g>
-      ))}
-      {/* Spot marker - label inside chart area */}
-      <line x1={sx(spot)} x2={sx(spot)} y1={P.t} y2={P.t+ch} stroke="#7c3aed" strokeWidth="1" strokeDasharray="2,3" opacity="0.5"/>
-      <text x={sx(spot)+4} y={P.t+ch-6} textAnchor="start" fill="#7c3aed" fontSize="8" fontFamily="'DM Mono',monospace" opacity="0.7">S={spot}</text>
-      {/* Breakeven labels - staggered if close */}
-      {beLabels.map((bl,i)=><g key={`be${i}`}>
-        <line x1={bl.px} x2={bl.px} y1={zeroY-22} y2={zeroY+22} stroke="#e11d48" strokeWidth="1.5" opacity="0.5"/>
-        <circle cx={bl.px} cy={zeroY} r="5" fill="#e11d48" stroke="#fff" strokeWidth="2"/>
-        <rect x={bl.px-24} y={zeroY+bl.yOff} width="48" height="18" rx="4" fill="#e11d48"/>
-        <text x={bl.px} y={zeroY+bl.yOff+12} textAnchor="middle" fill="#fff" fontSize="10" fontWeight="700" fontFamily="'DM Mono',monospace">{bl.be}</text>
-      </g>)}
-      {/* Axis titles */}
-      <text x={(P.l+W-P.r)/2} y={H-6} textAnchor="middle" fill="#999" fontSize="10" fontFamily="'DM Mono',monospace">Spot at Expiration</text>
-      <text x={14} y={H/2} textAnchor="middle" fill="#999" fontSize="10" fontFamily="'DM Mono',monospace" transform={`rotate(-90,14,${H/2})`}>P&L / share</text>
-    </svg>
-  );
 }
 
-/* ═══ CHART MODAL ═══ */
-function ChartModal({data,breakevens,spot,strikes,legs,hedged,onClose}){
-  const[zoom,setZoom]=useState(1);
-  const containerRef=useRef(null);
-  const zoomIn=()=>setZoom(z=>Math.min(z+0.5,4));
-  const zoomOut=()=>setZoom(z=>Math.max(z-0.5,1));
-  const resetZoom=()=>setZoom(1);
+function handleDesktopSubmit(e){e.preventDefault();submitAnswer(parseFloat(document.getElementById('qInputDesktop').value));}
+function kpPress(ch){if(feedback!==null)return;if(ch==='.'&&inputStr.includes('.'))return;if(ch==='.'&&!inputStr){inputStr='0.';renderDisplay();return;}inputStr+=ch;renderDisplay();}
+function kpDelete(){if(feedback!==null)return;inputStr=inputStr.slice(0,-1);renderDisplay();}
+function kpNeg(){if(feedback!==null)return;if(inputStr.startsWith('-'))inputStr=inputStr.slice(1);else if(inputStr)inputStr='-'+inputStr;renderDisplay();}
+function kpSubmit(){if(feedback!==null||!inputStr)return;submitAnswer(parseFloat(inputStr));}
 
-  // Pinch-to-zoom
-  const lastDist=useRef(null);
-  const onTouchStart=e=>{
-    if(e.touches.length===2){
-      const dx=e.touches[0].clientX-e.touches[1].clientX;
-      const dy=e.touches[0].clientY-e.touches[1].clientY;
-      lastDist.current=Math.hypot(dx,dy);
-    }
-  };
-  const onTouchMove=e=>{
-    if(e.touches.length===2&&lastDist.current!==null){
-      const dx=e.touches[0].clientX-e.touches[1].clientX;
-      const dy=e.touches[0].clientY-e.touches[1].clientY;
-      const dist=Math.hypot(dx,dy);
-      const delta=(dist-lastDist.current)*0.008;
-      setZoom(z=>Math.min(4,Math.max(1,z+delta)));
-      lastDist.current=dist;
-      e.preventDefault();
-    }
-  };
-  const onTouchEnd=()=>{lastDist.current=null;};
-
-  return(
-    <div onClick={onClose} style={{position:"fixed",inset:0,zIndex:1000,background:"rgba(0,0,0,0.35)",backdropFilter:"blur(4px)",display:"flex",alignItems:"center",justifyContent:"center",padding:8}}>
-      <div onClick={e=>e.stopPropagation()} style={{background:"#fff",borderRadius:16,padding:"16px 14px 12px",maxWidth:680,width:"100%",maxHeight:"95vh",display:"flex",flexDirection:"column",boxShadow:"0 20px 60px rgba(0,0,0,0.18)"}}>
-        <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:10,flexShrink:0}}>
-          <span style={{fontFamily:"'DM Mono',monospace",fontSize:12,fontWeight:500,color:"#1e293b",letterSpacing:1.5,textTransform:"uppercase"}}>Payoff Diagram</span>
-          <div style={{display:"flex",gap:6,alignItems:"center"}}>
-            <button onClick={zoomOut} style={{width:32,height:32,borderRadius:8,border:"1px solid #e2e8f0",background:"#f8fafc",color:"#475569",fontSize:18,cursor:"pointer",fontFamily:"'DM Mono',monospace",display:"flex",alignItems:"center",justifyContent:"center"}}>−</button>
-            <button onClick={resetZoom} style={{padding:"4px 8px",borderRadius:8,border:"1px solid #e2e8f0",background:"#f8fafc",color:"#475569",fontSize:11,cursor:"pointer",fontFamily:"'DM Mono',monospace"}}>{Math.round(zoom*100)}%</button>
-            <button onClick={zoomIn} style={{width:32,height:32,borderRadius:8,border:"1px solid #e2e8f0",background:"#f8fafc",color:"#475569",fontSize:18,cursor:"pointer",fontFamily:"'DM Mono',monospace",display:"flex",alignItems:"center",justifyContent:"center"}}>+</button>
-            <button onClick={onClose} style={{width:32,height:32,borderRadius:8,background:"#f1f5f9",border:"none",color:"#64748b",fontSize:16,cursor:"pointer",fontFamily:"'DM Mono',monospace",display:"flex",alignItems:"center",justifyContent:"center",marginLeft:4}}>✕</button>
-          </div>
-        </div>
-        <div ref={containerRef} onTouchStart={onTouchStart} onTouchMove={onTouchMove} onTouchEnd={onTouchEnd}
-          style={{overflow:"auto",flex:1,WebkitOverflowScrolling:"touch",borderRadius:8,border:"1px solid #f1f5f9"}}>
-          <div style={{width:zoom===1?"100%":`${zoom*100}%`,minWidth:"100%",transition:"width 0.2s ease"}}>
-            <Chart data={data} breakevens={breakevens} spot={spot} strikes={strikes} legs={legs} hedged={hedged}/>
-          </div>
-        </div>
-        <div style={{marginTop:10,display:"flex",gap:18,justifyContent:"center",flexWrap:"wrap",flexShrink:0}}>
-          {[{l:"P&L",c:"#2563eb"},{l:"Strikes",c:"#f59e0b"},{l:"Spot",c:"#7c3aed"},{l:"Breakevens",c:"#e11d48"},{l:"Δ Slope",c:"#2563eb"}].map(x=>
-            <span key={x.l} style={{fontSize:10,color:x.c,fontFamily:"'DM Mono',monospace",fontWeight:500}}>● {x.l}</span>
-          )}
-        </div>
-      </div>
-    </div>
-  );
+function updateTimer(){
+  elapsed++;
+  if(duration!==null){
+    timeLeft--;const pct=(timeLeft/duration)*100,f=document.getElementById('progressFill');
+    f.style.width=pct+'%';f.style.background=timeLeft<=15?'var(--red)':'linear-gradient(90deg,var(--gold-dim),var(--gold))';
+    const t=document.getElementById('gTimer');t.className='game-timer'+(timeLeft<=15?' urgent':'');
+    t.textContent=Math.floor(timeLeft/60)+':'+String(timeLeft%60).padStart(2,'0');
+    if(timeLeft<=0)endGame();
+  }else{document.getElementById('gTimer').textContent='▲ '+Math.floor(elapsed/60)+':'+String(elapsed%60).padStart(2,'0');}
 }
 
-/* ═══ SOLUTION BOX ═══ */
-function SolutionBox({legs,spot,hedged}){
-  const[open,setOpen]=useState(false);
-  const sol=useMemo(()=>buildSolution(legs,spot,hedged),[legs,spot,hedged]);
-  return(
-    <div style={{marginTop:12,border:"1px solid #e0e7ff",borderRadius:12,overflow:"hidden",background:"#fafbff"}}>
-      <button onClick={()=>setOpen(o=>!o)} style={{
-        width:"100%",display:"flex",justifyContent:"space-between",alignItems:"center",
-        padding:"12px 16px",background:open?"#eef2ff":"#fafbff",border:"none",cursor:"pointer",
-        fontFamily:"'DM Mono',monospace",fontSize:"clamp(13px,3.2vw,14px)",fontWeight:500,color:"#4f46e5",
-      }}>
-        <span>{open?"▼":"▶"} How to solve this</span>
-        <span style={{fontSize:"clamp(11px,2.8vw,12px)",color:"#94a3b8"}}>{open?"hide":"show steps"}</span>
-      </button>
-      {open&&(
-        <div style={{padding:"4px 16px 16px"}}>
-          {sol.steps.map((step,i)=>(
-            <div key={i} style={{marginTop:14}}>
-              <div style={{fontSize:"clamp(12px,3vw,13px)",fontWeight:500,color:"#4338ca",letterSpacing:0.5,marginBottom:6}}>{step.title}</div>
-              {step.lines.map((line,j)=>{
-                const isNote=j===step.lines.length-1 && (line.startsWith("This is")||line.startsWith("Slope =")||line.startsWith("Unhedged")||line.startsWith("Net premium")||line.includes("anchor —"));
-                return(
-                  <div key={j} style={{
-                    fontSize:"clamp(12px,3vw,13.5px)",color:isNote?"#64748b":"#1e293b",
-                    fontStyle:isNote?"italic":"normal",lineHeight:1.5,marginBottom:4,
-                    paddingLeft:10,borderLeft:isNote?"none":"2px solid #e0e7ff",
-                  }}>{line}</div>
-                );
-              })}
-            </div>
-          ))}
-          <div style={{marginTop:16,padding:"10px 14px",background:"#eef2ff",borderRadius:8,fontSize:"clamp(13px,3.2vw,14px)",fontWeight:500,color:"#4338ca"}}>
-            Breakeven{sol.breakevens.length!==1?"s":""}: {sol.breakevens.length===0?"none":sol.breakevens.join(", ")}
-          </div>
-        </div>
-      )}
-    </div>
-  );
+function startGame(){
+  showIdentities=document.getElementById('showIdToggle').checked;
+  score=0;streak=0;bestStreak=0;elapsed=0;history=[];feedback=null;timeLeft=duration||0;
+  document.getElementById('gScore').textContent='0';document.getElementById('gStreak').textContent='';
+  document.getElementById('finishBtn').style.display='block';
+  document.getElementById('progressBar').style.display=duration===null?'none':'block';
+  document.getElementById('progressFill').style.width='100%';
+  document.getElementById('progressFill').style.background='linear-gradient(90deg,var(--gold-dim),var(--gold))';
+  document.getElementById('gameRef').style.display=showIdentities?'':'none';
+  if(duration!==null){document.getElementById('gTimer').textContent=Math.floor(timeLeft/60)+':'+String(timeLeft%60).padStart(2,'0');}
+  else{document.getElementById('gTimer').textContent='▲ 0:00';}
+  document.getElementById('gTimer').className='game-timer';
+  showScreen('gameScreen');newQuestion();
+  if(timerInterval)clearInterval(timerInterval);timerInterval=setInterval(updateTimer,1000);
 }
 
-/* ═══ NUMPAD ═══ */
-function Numpad({onKey}){
-  const keys=["1","2","3","4","5","6","7","8","9",".","0","⌫"];
-  return(
-    <div style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:8,maxWidth:320,margin:"0 auto"}}>
-      {keys.map(k=>(
-        <button key={k} onClick={()=>onKey(k)} style={{
-          padding:"16px 0",fontSize:"clamp(24px,6vw,26px)",fontWeight:500,fontFamily:"'DM Mono',monospace",
-          background:k==="⌫"?"#fee2e2":"#f8fafc",color:k==="⌫"?"#dc2626":"#1e293b",
-          border:"1px solid #e2e8f0",borderRadius:12,cursor:"pointer",
-          WebkitTapHighlightColor:"transparent",userSelect:"none",transition:"background 0.1s",
-        }}>{k}</button>
-      ))}
-    </div>
-  );
+function endGame(){if(timerInterval){clearInterval(timerInterval);timerInterval=null;}renderResults();showScreen('resultsScreen');}
+
+function renderResults(){
+  const c=history.filter(h=>h.correct).length,t=history.length,a=t>0?Math.round(c/t*100):0;
+  const em=Math.floor(elapsed/60),es=elapsed%60;
+  document.getElementById('rLabel').textContent=duration===null?'Session Complete':"Time's Up";
+  document.getElementById('rScore').textContent=score;
+  document.getElementById('rStats').textContent=c+' / '+t+' correct · '+a+'%'+(duration===null?' · '+em+':'+String(es).padStart(2,'0'):'');
+  document.getElementById('rStreak').textContent='Best streak: '+bestStreak;
+  const byMode={};history.forEach(h=>{if(!byMode[h.mode])byMode[h.mode]={c:0,t:0};byMode[h.mode].t++;if(h.correct)byMode[h.mode].c++;});
+  const bd=document.getElementById('rBreakdown');bd.innerHTML='';
+  Object.entries(byMode).forEach(([m,s])=>{bd.innerHTML+='<div class="mode-stat"><div class="ms-label">'+m+'</div><div class="ms-val">'+s.c+'<span class="ms-total"> / '+s.t+'</span></div></div>';});
+  const missed=history.filter(h=>!h.correct),ms=document.getElementById('rMissed');
+  if(!missed.length){ms.innerHTML='';return;}
+  let h='<div class="missed-title">Review — Missed</div><div class="missed-list">';
+  missed.forEach(x=>{h+='<div class="missed-row"><span class="mr-label">'+x.mode+' → '+x.solve+'</span><span><span class="mr-yours">'+x.userAnswer+'</span><span class="mr-correct">'+x.answer+'</span></span></div>';});
+  ms.innerHTML=h+'</div>';
 }
 
-/* ═══ LANDING PAGE ═══ */
-function LandingPage({onStart}){
-  const[selected,setSelected]=useState(new Set(STRUCT_KEYS));
-  const[timeLimit,setTimeLimit]=useState(60);
-  const allSelected=selected.size===STRUCT_KEYS.length;
+function goMenu(){showScreen('menuScreen');buildMenu();}
 
-  const toggleAll=()=>{if(allSelected)setSelected(new Set());else setSelected(new Set(STRUCT_KEYS));};
-  const toggle=k=>{const next=new Set(selected);next.has(k)?next.delete(k):next.add(k);setSelected(next);};
-  const toggleGroup=keys=>{const allIn=keys.every(k=>selected.has(k));const next=new Set(selected);keys.forEach(k=>allIn?next.delete(k):next.add(k));setSelected(next);};
-
-  const timeOptions=[{label:"1 min",val:60},{label:"2 min",val:120},{label:"4 min",val:240},{label:"Unlimited",val:0}];
-
-  return(
-    <div style={{minHeight:"100vh",background:"#f8f9fc",fontFamily:"'DM Mono','IBM Plex Mono',monospace",padding:"40px 16px 60px",display:"flex",flexDirection:"column",alignItems:"center"}}>
-      <div style={{textAlign:"center",marginBottom:36,animation:"fadeUp 0.4s ease-out"}}>
-        <h1 style={{fontFamily:"'Instrument Serif',Georgia,serif",fontSize:"clamp(32px,6vw,48px)",fontWeight:400,color:"#1e293b",marginBottom:6,letterSpacing:-0.5}}>Breakeven Drill</h1>
-        <p style={{fontSize:12,color:"#94a3b8",letterSpacing:2,textTransform:"uppercase"}}>Options Structures · Per Share · At Expiration</p>
-      </div>
-      <div style={{maxWidth:520,width:"100%",animation:"fadeUp 0.5s ease-out"}}>
-        <div style={{background:"#fff",border:"1px solid #e2e8f0",borderRadius:20,padding:"20px 22px",marginBottom:16,boxShadow:"0 2px 12px rgba(0,0,0,0.04)"}}>
-          <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:14}}>
-            <span style={{fontSize:10,color:"#64748b",letterSpacing:2,textTransform:"uppercase",fontWeight:500}}>Structures</span>
-            <button onClick={toggleAll} style={{fontSize:11,padding:"4px 14px",borderRadius:8,cursor:"pointer",fontFamily:"'DM Mono',monospace",background:allSelected?"#2563eb":"#f8fafc",color:allSelected?"#fff":"#64748b",border:allSelected?"none":"1px solid #e2e8f0",fontWeight:500}}>{allSelected?"Deselect All":"Select All"}</button>
-          </div>
-          {STRUCT_GROUPS.map(g=>(
-            <div key={g.label} style={{marginBottom:12}}>
-              <button onClick={()=>toggleGroup(g.keys)} style={{fontSize:9,color:"#94a3b8",letterSpacing:1.5,textTransform:"uppercase",background:"none",border:"none",cursor:"pointer",marginBottom:6,fontFamily:"'DM Mono',monospace",fontWeight:500,padding:0}}>{g.label}</button>
-              <div style={{display:"flex",flexWrap:"wrap",gap:6}}>
-                {g.keys.map(k=>{const on=selected.has(k);return(
-                  <button key={k} onClick={()=>toggle(k)} style={{fontSize:11,padding:"6px 12px",borderRadius:10,cursor:"pointer",fontFamily:"'DM Mono',monospace",fontWeight:on?500:400,background:on?"#eff6ff":"#f8fafc",color:on?"#2563eb":"#94a3b8",border:`1.5px solid ${on?"#bfdbfe":"#e2e8f0"}`,transition:"all 0.15s"}}>{k}</button>
-                );})}
-              </div>
-            </div>
-          ))}
-        </div>
-        <div style={{background:"#fff",border:"1px solid #e2e8f0",borderRadius:20,padding:"20px 22px",marginBottom:24,boxShadow:"0 2px 12px rgba(0,0,0,0.04)"}}>
-          <span style={{fontSize:10,color:"#64748b",letterSpacing:2,textTransform:"uppercase",fontWeight:500,display:"block",marginBottom:12}}>Time Per Question</span>
-          <div style={{display:"flex",flexWrap:"wrap",gap:8}}>
-            {timeOptions.map(t=>{const on=timeLimit===t.val;return(
-              <button key={t.val} onClick={()=>setTimeLimit(t.val)} style={{fontSize:12,padding:"8px 18px",borderRadius:10,cursor:"pointer",fontFamily:"'DM Mono',monospace",fontWeight:on?500:400,background:on?"#2563eb":"#f8fafc",color:on?"#fff":"#64748b",border:on?"none":"1.5px solid #e2e8f0",transition:"all 0.15s"}}>{t.label}</button>
-            );})}
-          </div>
-        </div>
-        <button onClick={()=>{if(selected.size>0)onStart([...selected],timeLimit);}} disabled={selected.size===0} style={{width:"100%",padding:"16px",fontSize:15,fontWeight:500,letterSpacing:1.5,fontFamily:"'DM Mono',monospace",background:selected.size>0?"linear-gradient(135deg,#2563eb,#4f46e5)":"#e2e8f0",color:selected.size>0?"#fff":"#94a3b8",border:"none",borderRadius:14,cursor:selected.size>0?"pointer":"not-allowed",boxShadow:selected.size>0?"0 4px 20px rgba(37,99,235,0.3)":"none",transition:"all 0.2s"}}>START DRILL</button>
-      </div>
-    </div>
-  );
-}
-
-/* ═══ GAME SCREEN ═══ */
-function GameScreen({structKeys,timeLimit,onExit}){
-  const[problem,setProblem]=useState(null);
-  const[hedged,setHedged]=useState(false);
-  const[answers,setAnswers]=useState([""]);
-  const[activeIdx,setActiveIdx]=useState(0);
-  const[submitted,setSubmitted]=useState(false);
-  const[correct,setCorrect]=useState(null);
-  const[showChart,setShowChart]=useState(false);
-  const[score,setScore]=useState({hit:0,total:0});
-  const[streak,setStreak]=useState(0);
-  const[bestStreak,setBestStreak]=useState(0);
-  const[history,setHistory]=useState([]);
-  const[elapsed,setElapsed]=useState(0);
-  const[timerActive,setTimerActive]=useState(false);
-  const[timeUp,setTimeUp]=useState(false);
-  const[showSlopeHint,setShowSlopeHint]=useState(false);
-  const[confidence,setConfidence]=useState(null);
-  const[calib,setCalib]=useState({}); // {guess:{hit,total},sure:{...},certain:{...}}
-  const timerRef=useRef(null);
-
-  useEffect(()=>{
-    if(timerActive){timerRef.current=setInterval(()=>setElapsed(e=>e+1),1000);}
-    else clearInterval(timerRef.current);
-    return()=>clearInterval(timerRef.current);
-  },[timerActive]);
-
-  useEffect(()=>{
-    if(timeLimit>0&&elapsed>=timeLimit&&!submitted&&!timeUp){
-      setTimeUp(true);setTimerActive(false);doSubmit(true);
-    }
-  },[elapsed,timeLimit,submitted,timeUp]);
-
-  const generate=useCallback(()=>{
-    const key=pick(structKeys);
-    const p=STRUCTS[key]();
-    const h=UNHEDGED_ONLY.has(key)?false:pick([true,false]);
-    const bes=findBreakevens(p.legs,p.spot,h).filter(b=>b>=0);
-    const numBEs=Math.max(1,bes.length);
-    setProblem(p);setHedged(h);setAnswers(Array(numBEs).fill(""));setActiveIdx(0);
-    setSubmitted(false);setCorrect(null);setShowChart(false);setTimeUp(false);
-    setShowSlopeHint(false);setConfidence(null);
-    setElapsed(0);setTimerActive(true);
-  },[structKeys]);
-
-  useEffect(()=>{generate();},[generate]);
-
-  const correctBEs=useMemo(()=>problem?findBreakevens(problem.legs,problem.spot,hedged).filter(b=>b>=0):[],[problem,hedged]);
-  const chartData=useMemo(()=>problem?payoffCurve(problem.legs,problem.spot,hedged):[],[problem,hedged]);
-  const maxPL=useMemo(()=>problem?maxProfitLoss(problem.legs,problem.spot,hedged):null,[problem,hedged]);
-  const slopeRegions=useMemo(()=>{
-    if(!problem)return[];
-    const strikes=[...new Set(problem.legs.map(l=>l.K))].sort((a,b)=>a-b);
-    const lo=strikes[0]-15,hi=strikes[strikes.length-1]+15;
-    const bounds=[lo,...strikes,hi];
-    const slopeAt=S=>{const eps=0.01;return R3((totalPnl(problem.legs,problem.spot,S+eps,hedged)-totalPnl(problem.legs,problem.spot,S-eps,hedged))/(2*eps));};
-    const out=[];
-    for(let i=0;i<bounds.length-1;i++){
-      const mid=(bounds[i]+bounds[i+1])/2;
-      let label;
-      if(i===0)label=`Below ${strikes[0]}`;
-      else if(i===bounds.length-2)label=`Above ${strikes[strikes.length-1]}`;
-      else label=`${strikes[i-1]}–${strikes[i]}`;
-      out.push({label,slope:slopeAt(mid)});
-    }
-    return out;
-  },[problem,hedged]);
-
-  const doSubmit=(forced=false)=>{
-    if(submitted)return;
-    setTimerActive(false);
-    const userBEs=answers.map(a=>parseFloat(a)).filter(a=>!isNaN(a)).sort((a,b)=>a-b);
-    let ok=userBEs.length===correctBEs.length;
-    if(ok)for(let i=0;i<correctBEs.length;i++)if(Math.abs(userBEs[i]-correctBEs[i])>0.05)ok=false;
-    if(forced&&userBEs.length===0)ok=false;
-    setSubmitted(true);setCorrect(ok);
-    setScore(p=>({hit:p.hit+(ok?1:0),total:p.total+1}));
-    const ns=ok?streak+1:0;setStreak(ns);if(ns>bestStreak)setBestStreak(ns);
-    const fmt=`${Math.floor(elapsed/60)}:${String(elapsed%60).padStart(2,"0")}`;
-    setHistory(prev=>[{name:problem.name,hedged,ok,expected:correctBEs,given:userBEs,time:fmt},...prev].slice(0,40));
-    if(confidence){
-      setCalib(prev=>{
-        const cur=prev[confidence]||{hit:0,total:0};
-        return{...prev,[confidence]:{hit:cur.hit+(ok?1:0),total:cur.total+1}};
-      });
-    }
-  };
-
-  const handleKey=k=>{
-    if(submitted)return;
-    setAnswers(prev=>{
-      const next=[...prev];
-      if(k==="⌫")next[activeIdx]=next[activeIdx].slice(0,-1);
-      else if(k==="."){ if(!next[activeIdx].includes("."))next[activeIdx]+="."; }
-      else next[activeIdx]+=k;
-      return next;
-    });
-  };
-
-  useEffect(()=>{
-    const handler=e=>{
-      if(e.key==="Escape"){e.preventDefault();if(showChart){setShowChart(false);return;}onExit();return;}
-      if(e.key==="Enter"){e.preventDefault();if(!submitted)doSubmit(false);else generate();return;}
-      if(e.key==="Tab"&&!submitted){e.preventDefault();setActiveIdx(prev=>(prev+1)%answers.length);return;}
-      if(submitted)return;
-      if(e.key>="0"&&e.key<="9"){handleKey(e.key);return;}
-      if(e.key==="."||e.key===","){handleKey(".");return;}
-      if(e.key==="Backspace"){handleKey("⌫");return;}
-    };
-    window.addEventListener("keydown",handler);
-    return()=>window.removeEventListener("keydown",handler);
-  });
-
-  if(!problem)return null;
-
-  const strikes=[...new Set(problem.legs.map(l=>l.K))].sort((a,b)=>a-b);
-  const nd=R2(netDelta(problem.legs));
-  const pct=score.total?Math.round(score.hit/score.total*100):0;
-  const fmtTime=`${Math.floor(elapsed/60)}:${String(elapsed%60).padStart(2,"0")}`;
-  const timerFrac=timeLimit>0?Math.min(elapsed/timeLimit,1):0;
-  const timerColor=timerFrac<0.5?"#22c55e":timerFrac<0.8?"#f59e0b":"#ef4444";
-
-  return(
-    <div style={{minHeight:"100vh",background:"#f8f9fc",fontFamily:"'DM Mono','IBM Plex Mono',monospace",padding:"12px 12px 24px"}}>
-      {/* Top bar */}
-      <div style={{maxWidth:640,margin:"0 auto 8px",display:"flex",justifyContent:"space-between",alignItems:"center"}}>
-        <button onClick={onExit} style={{fontSize:"clamp(13px,3.2vw,14px)",padding:"8px 16px",borderRadius:8,cursor:"pointer",fontFamily:"'DM Mono',monospace",fontWeight:500,background:"#fff",color:"#64748b",border:"1px solid #e2e8f0"}}>← Exit</button>
-        <div style={{display:"flex",gap:6,alignItems:"center"}}>
-          {[{l:"Score",v:`${score.hit}/${score.total}`,c:"#2563eb"},{l:"%",v:`${pct}%`,c:"#7c3aed"},{l:"Streak",v:streak,c:"#16a34a"},{l:"Best",v:bestStreak,c:"#d97706"}].map(s=>(
-            <div key={s.l} style={{background:"#fff",border:"1px solid #e2e8f0",borderRadius:10,padding:"4px 12px",textAlign:"center",minWidth:52}}>
-              <div style={{fontSize:"clamp(10px,2.5vw,11px)",color:"#94a3b8",letterSpacing:1.5,textTransform:"uppercase"}}>{s.l}</div>
-              <div style={{fontSize:"clamp(18px,4.5vw,20px)",fontWeight:500,color:s.c}}>{s.v}</div>
-            </div>
-          ))}
-        </div>
-      </div>
-
-      {/* Timer */}
-      {timeLimit>0&&(
-        <div style={{maxWidth:640,margin:"0 auto 8px"}}>
-          <div style={{background:"#e2e8f0",borderRadius:6,height:6,overflow:"hidden"}}>
-            <div style={{height:"100%",width:`${(1-timerFrac)*100}%`,background:timerColor,borderRadius:6,transition:"width 1s linear, background 0.3s"}}/>
-          </div>
-          <div style={{textAlign:"right",fontSize:"clamp(13px,3.2vw,14px)",color:timerColor,fontWeight:500,marginTop:2}}>{fmtTime}{` / ${Math.floor(timeLimit/60)}:${String(timeLimit%60).padStart(2,"0")}`}</div>
-        </div>
-      )}
-      {timeLimit===0&&(
-        <div style={{maxWidth:640,margin:"0 auto 8px",textAlign:"right"}}>
-          <span style={{fontSize:"clamp(13px,3.2vw,14px)",color:"#94a3b8",fontWeight:500}}>{fmtTime}</span>
-        </div>
-      )}
-
-      {/* Problem card */}
-      <div className="gcard" key={score.total} style={{maxWidth:640,margin:"0 auto 10px",background:"#fff",border:"1px solid #e2e8f0",borderRadius:18,padding:"16px 18px",boxShadow:"0 2px 16px rgba(0,0,0,0.05)"}}>
-        <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:10,flexWrap:"wrap",gap:6}}>
-          <h2 style={{fontFamily:"'Instrument Serif',Georgia,serif",fontSize:"clamp(22px,5vw,28px)",fontWeight:400,color:"#1e293b"}}>{problem.name}</h2>
-          <span style={{fontSize:"clamp(12px,3vw,13px)",fontWeight:500,padding:"4px 12px",borderRadius:16,letterSpacing:1,background:hedged?"#dcfce7":"#fef3c7",color:hedged?"#166534":"#92400e",border:`1px solid ${hedged?"#bbf7d0":"#fde68a"}`}}>{hedged?"Δ HEDGED":"UNHEDGED"}</span>
-        </div>
-
-        <div style={{display:"inline-flex",alignItems:"center",gap:8,background:"#f8fafc",border:"1px solid #e2e8f0",borderRadius:8,padding:"6px 14px",marginBottom:12}}>
-          <span style={{fontSize:"clamp(12px,3vw,13px)",color:"#94a3b8",letterSpacing:1}}>SPOT</span>
-          <span style={{fontSize:"clamp(22px,5.5vw,26px)",fontWeight:500,color:"#7c3aed"}}>{problem.spot}</span>
-        </div>
-
-        <div style={{overflowX:"auto",marginBottom:12}}>
-          <table style={{width:"100%",borderCollapse:"collapse",fontSize:"clamp(14px,3.5vw,16px)"}}>
-            <thead><tr>
-              {["#","Type","Side","Strike","Δ","Prem","Qty"].map(h=>
-                <th key={h} style={{padding:"8px 6px",textAlign:"left",color:"#94a3b8",fontWeight:500,fontSize:"clamp(11px,2.8vw,12px)",letterSpacing:1.5,textTransform:"uppercase",borderBottom:"1px solid #f1f5f9"}}>{h}</th>
-              )}
-            </tr></thead>
-            <tbody>{problem.legs.map((l,i)=>
-              <tr key={i}>
-                <td style={{padding:"8px 6px",color:"#cbd5e1"}}>{i+1}</td>
-                <td style={{padding:"8px 6px",fontWeight:500,color:l.type==="call"?"#2563eb":"#e11d48"}}>{l.type.toUpperCase()}</td>
-                <td style={{padding:"8px 6px",fontWeight:500,color:l.side==="long"?"#16a34a":"#dc2626"}}>{l.side.toUpperCase()}</td>
-                <td style={{padding:"8px 6px",fontWeight:500,color:"#d97706"}}>{l.K}</td>
-                <td style={{padding:"8px 6px",color:"#475569"}}>{l.type==="put"?"-":""}{l.delta}</td>
-                <td style={{padding:"8px 6px",color:"#475569"}}>{l.prem}</td>
-                <td style={{padding:"8px 6px",color:"#475569"}}>{l.qty}</td>
-              </tr>
-            )}</tbody>
-          </table>
-        </div>
-
-        {hedged&&<div style={{background:"#f0fdf4",border:"1px solid #bbf7d0",borderRadius:8,padding:"8px 14px",marginBottom:12,fontSize:"clamp(14px,3.5vw,15px)",color:"#166534"}}>
-          <span style={{fontWeight:500}}>Net Δ = {nd}</span> → hedge {R2(Math.abs(nd))} sh/opt {nd>0?"short":"long"} @ {problem.spot}
-        </div>}
-
-        <div style={{marginBottom:12}}>
-          <div style={{fontSize:"clamp(12px,3vw,13px)",color:"#94a3b8",marginBottom:8,letterSpacing:1.5,textTransform:"uppercase"}}>
-            Your breakeven{answers.length>1?"s":""}
-          </div>
-          <div style={{display:"flex",flexWrap:"wrap",gap:8,alignItems:"center"}}>
-            {answers.map((a,i)=>(
-              <div key={i} onClick={()=>!submitted&&setActiveIdx(i)} style={{
-                minWidth:90,padding:"10px 14px",
-                background:i===activeIdx&&!submitted?"#eff6ff":"#f8fafc",
-                border:`1.5px solid ${i===activeIdx&&!submitted?"#2563eb":"#e2e8f0"}`,
-                borderRadius:10,fontSize:"clamp(18px,4.5vw,20px)",fontFamily:"'DM Mono',monospace",
-                color:a?"#1e293b":"#cbd5e1",cursor:submitted?"default":"pointer",
-                transition:"border-color 0.15s",minHeight:42,display:"flex",alignItems:"center",
-              }}>
-                {a||`BE ${i+1}`}
-                {i===activeIdx&&!submitted&&<span style={{animation:"blink 1s infinite",marginLeft:1,color:"#2563eb"}}>|</span>}
-              </div>
-            ))}
-          </div>
-        </div>
-
-        {/* Slope hint (scaffolding) */}
-        {!submitted&&(
-          <div style={{marginBottom:12}}>
-            <button onClick={()=>setShowSlopeHint(s=>!s)} style={{
-              fontSize:"clamp(12px,3vw,13px)",padding:"6px 14px",borderRadius:8,cursor:"pointer",
-              fontFamily:"'DM Mono',monospace",fontWeight:500,
-              background:showSlopeHint?"#fef3c7":"#f8fafc",color:showSlopeHint?"#92400e":"#94a3b8",
-              border:`1px solid ${showSlopeHint?"#fde68a":"#e2e8f0"}`,
-            }}>{showSlopeHint?"▼ Slopes (training wheels)":"▶ Reveal slopes"}</button>
-            {showSlopeHint&&(
-              <div style={{marginTop:8,padding:"10px 14px",background:"#fffbeb",border:"1px solid #fde68a",borderRadius:10,fontSize:"clamp(12px,3vw,13.5px)",color:"#78350f",lineHeight:1.6}}>
-                {slopeRegions.map((r,i)=>(
-                  <div key={i}>{r.label}: <span style={{fontWeight:500}}>slope {r.slope>0?"+":""}{r.slope}/$</span>{Math.abs(r.slope)<0.001?" (flat — max P/L plateau)":""}</div>
-                ))}
-                <div style={{marginTop:6,fontStyle:"italic",color:"#a16207"}}>Anchor P&L at a strike ÷ slope = distance to breakeven.</div>
-              </div>
-            )}
-          </div>
-        )}
-
-        {/* Confidence selector */}
-        {!submitted&&(
-          <div style={{marginBottom:12,display:"flex",alignItems:"center",gap:8,flexWrap:"wrap"}}>
-            <span style={{fontSize:"clamp(11px,2.8vw,12px)",color:"#94a3b8",letterSpacing:1,textTransform:"uppercase"}}>Confidence:</span>
-            {[{k:"guess",l:"Guess",c:"#94a3b8"},{k:"sure",l:"Fairly sure",c:"#2563eb"},{k:"certain",l:"Certain",c:"#16a34a"}].map(opt=>(
-              <button key={opt.k} onClick={()=>setConfidence(opt.k)} style={{
-                fontSize:"clamp(11px,2.8vw,12px)",padding:"5px 12px",borderRadius:8,cursor:"pointer",
-                fontFamily:"'DM Mono',monospace",fontWeight:confidence===opt.k?500:400,
-                background:confidence===opt.k?opt.c:"#f8fafc",color:confidence===opt.k?"#fff":"#64748b",
-                border:confidence===opt.k?"none":"1px solid #e2e8f0",transition:"all 0.15s",
-              }}>{opt.l}</button>
-            ))}
-          </div>
-        )}
-
-        {submitted&&(
-          <div style={{padding:14,borderRadius:12,background:correct?"#f0fdf4":"#fef2f2",border:`1px solid ${correct?"#bbf7d0":"#fecaca"}`,marginBottom:12}}>
-            <div style={{fontSize:"clamp(17px,4.2vw,19px)",fontWeight:500,color:correct?"#16a34a":"#dc2626",marginBottom:6}}>
-              {timeUp&&!correct?"⏱ Time's up ":"" }{correct?"✓ Correct!":"✗ Not quite"}
-              <span style={{marginLeft:8,fontSize:"clamp(13px,3.2vw,14px)",color:"#94a3b8"}}>{fmtTime}</span>
-              {confidence&&<span style={{marginLeft:8,fontSize:"clamp(11px,2.8vw,12px)",color:"#94a3b8"}}>({confidence})</span>}
-            </div>
-            <div style={{fontSize:"clamp(14px,3.5vw,15px)",color:"#64748b",marginBottom:8}}>
-              BE{correctBEs.length!==1?"s":""}: {correctBEs.length===0?<span style={{color:"#d97706",fontWeight:500}}>None</span>:correctBEs.map((be,i)=><span key={i} style={{color:"#1e293b",fontWeight:500}}>{i>0?", ":""}{be}</span>)}
-            </div>
-            {maxPL&&(
-              <div style={{display:"flex",gap:16,fontSize:"clamp(13px,3.2vw,14px)",flexWrap:"wrap"}}>
-                <span style={{color:"#16a34a"}}>Max profit: <span style={{fontWeight:500}}>{maxPL.maxPUnbounded?"unlimited":`+${maxPL.maxP}`}</span></span>
-                <span style={{color:"#dc2626"}}>Max loss: <span style={{fontWeight:500}}>{maxPL.maxLUnbounded?"unlimited":maxPL.maxL}</span></span>
-              </div>
-            )}
-          </div>
-        )}
-
-        {submitted&&<SolutionBox legs={problem.legs} spot={problem.spot} hedged={hedged}/>}
-
-        {submitted&&(
-          <div style={{display:"flex",gap:8,flexWrap:"wrap",marginTop:12}}>
-            <button onClick={()=>setShowChart(true)} style={{flex:1,padding:"14px",fontSize:"clamp(14px,3.5vw,15px)",fontWeight:500,fontFamily:"'DM Mono',monospace",background:"#fff",border:"1.5px solid #2563eb",borderRadius:12,color:"#2563eb",cursor:"pointer",letterSpacing:0.5}}>VIEW CHART</button>
-            <button onClick={generate} style={{flex:1,padding:"14px",fontSize:"clamp(14px,3.5vw,15px)",fontWeight:500,fontFamily:"'DM Mono',monospace",background:"linear-gradient(135deg,#2563eb,#4f46e5)",border:"none",borderRadius:12,color:"#fff",cursor:"pointer",letterSpacing:0.5,boxShadow:"0 2px 12px rgba(37,99,235,0.25)"}}>NEXT →</button>
-          </div>
-        )}
-      </div>
-
-      {/* Numpad */}
-      {!submitted&&(
-        <div style={{maxWidth:640,margin:"0 auto 12px"}}>
-          <Numpad onKey={handleKey}/>
-          <button onClick={()=>doSubmit(false)} style={{
-            width:"100%",maxWidth:320,display:"block",margin:"10px auto 0",
-            padding:"16px",fontSize:"clamp(16px,4vw,18px)",fontWeight:500,letterSpacing:1,fontFamily:"'DM Mono',monospace",
-            background:"linear-gradient(135deg,#2563eb,#4f46e5)",color:"#fff",border:"none",borderRadius:12,
-            cursor:"pointer",boxShadow:"0 2px 12px rgba(37,99,235,0.3)",
-          }}>SUBMIT</button>
-        </div>
-      )}
-
-      {/* Calibration */}
-      {Object.keys(calib).length>0&&(
-        <div style={{maxWidth:640,margin:"0 auto 10px",background:"#fff",border:"1px solid #e2e8f0",borderRadius:14,padding:"12px 14px",boxShadow:"0 1px 8px rgba(0,0,0,0.03)"}}>
-          <div style={{fontSize:"clamp(10px,2.5vw,11px)",color:"#94a3b8",letterSpacing:2,textTransform:"uppercase",marginBottom:8}}>Confidence Calibration</div>
-          <div style={{display:"flex",gap:10,flexWrap:"wrap"}}>
-            {[{k:"guess",l:"Guess",c:"#94a3b8"},{k:"sure",l:"Fairly sure",c:"#2563eb"},{k:"certain",l:"Certain",c:"#16a34a"}].map(opt=>{
-              const d=calib[opt.k];
-              if(!d)return null;
-              const pct=Math.round(d.hit/d.total*100);
-              return(
-                <div key={opt.k} style={{flex:"1 1 90px",background:"#f8fafc",border:`1px solid ${opt.c}33`,borderRadius:10,padding:"8px 12px",textAlign:"center"}}>
-                  <div style={{fontSize:"clamp(10px,2.5vw,11px)",color:"#94a3b8",marginBottom:2}}>{opt.l}</div>
-                  <div style={{fontSize:"clamp(17px,4.2vw,19px)",fontWeight:500,color:opt.c}}>{pct}%</div>
-                  <div style={{fontSize:"clamp(10px,2.5vw,11px)",color:"#cbd5e1"}}>{d.hit}/{d.total}</div>
-                </div>
-              );
-            })}
-          </div>
-          {calib.certain&&calib.certain.total>=2&&calib.certain.hit/calib.certain.total<0.8&&(
-            <div style={{marginTop:8,fontSize:"clamp(12px,3vw,13px)",color:"#dc2626",fontStyle:"italic"}}>⚠ You're missing trades you felt certain on — those are the ones to review closely.</div>
-          )}
-        </div>
-      )}
-
-      {/* History */}
-      {history.length>0&&(
-        <div style={{maxWidth:640,margin:"0 auto",background:"#fff",border:"1px solid #e2e8f0",borderRadius:14,padding:"12px 14px",boxShadow:"0 1px 8px rgba(0,0,0,0.03)"}}>
-          <div style={{fontSize:"clamp(10px,2.5vw,11px)",color:"#94a3b8",letterSpacing:2,textTransform:"uppercase",marginBottom:8}}>History</div>
-          {history.slice(0,10).map((h,i)=>(
-            <div key={i} style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"6px 0",borderBottom:i<Math.min(history.length,10)-1?"1px solid #f1f5f9":"none",fontSize:"clamp(13px,3.2vw,14px)",gap:8,flexWrap:"wrap"}}>
-              <div>
-                <span style={{color:h.ok?"#16a34a":"#dc2626",fontWeight:500}}>{h.ok?"✓":"✗"}</span>{" "}
-                <span style={{color:"#475569"}}>{h.name}</span>
-                <span style={{marginLeft:6,fontSize:"clamp(10px,2.5vw,11px)",padding:"2px 6px",borderRadius:5,background:h.hedged?"#dcfce7":"#fef3c7",color:h.hedged?"#166534":"#92400e"}}>{h.hedged?"ΔH":"UH"}</span>
-                <span style={{marginLeft:6,fontSize:"clamp(11px,2.8vw,12px)",color:"#cbd5e1"}}>{h.time}</span>
-              </div>
-              <div style={{color:"#94a3b8",fontSize:12}}>{h.expected.join(", ")||"—"}</div>
-            </div>
-          ))}
-        </div>
-      )}
-
-      {showChart&&<ChartModal data={chartData} breakevens={correctBEs} spot={problem.spot} strikes={strikes} legs={problem.legs} hedged={hedged} onClose={()=>setShowChart(false)}/>}
-    </div>
-  );
-}
-
-/* ═══ ROOT ═══ */
-function App(){
-  const[gameConfig,setGameConfig]=useState(null);
-  if(!gameConfig)return <LandingPage onStart={(keys,time)=>setGameConfig({keys,time})}/>;
-  return <GameScreen structKeys={gameConfig.keys} timeLimit={gameConfig.time} onExit={()=>setGameConfig(null)}/>;
-}
-
-ReactDOM.createRoot(document.getElementById("root")).render(<App/>);
+buildMenu();
+document.addEventListener('keydown',function(e){
+  if(!document.getElementById('gameScreen').classList.contains('active'))return;
+  if(e.key==='Escape')endGame();
+});
 </script>
 </body>
 </html>
